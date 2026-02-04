@@ -1,2 +1,15 @@
+# Environment files
 .env
+.env.local
+.env.staging
+.env.production
+
+# Node
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+
+# Claude
 .claude
