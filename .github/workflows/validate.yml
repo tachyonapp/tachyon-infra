@@ -1,0 +1,69 @@
+# Tachyon Infra Service CI Workflow
+# =============================================================================
+# NOTES
+# =============================================================================
+# - Validates YAML files, check environment completeness & scans for secrets
+# =============================================================================
+name: Validate Infrastructure
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Lint YAML files
+        run: npm run validate:yaml
+
+  validate-env:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate env schema completeness
+        run: bash scripts/validate-env.sh
+
+  validate-app-spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate App Spec structure
+        run: |
+          # Check required top-level keys exist
+          python3 -c "
+          import yaml, sys
+          with open('.do/app.yaml') as f:
+              spec = yaml.safe_load(f)
+          required = ['name', 'region', 'services', 'databases']
+          missing = [k for k in required if k not in spec]
+          if missing:
+              print(f'Missing required keys: {missing}')
+              sys.exit(1)
+          print('App Spec structure valid')
+          "
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified

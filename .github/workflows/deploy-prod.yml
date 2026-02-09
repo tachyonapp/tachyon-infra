@@ -1,0 +1,103 @@
+# DigitalOcean App Platfrom Production CD Workflow
+# =============================================================================
+# NOTES
+# =============================================================================
+# - Requires manual approval via GitHub Actions environment protection rules.
+# =============================================================================
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_version:
+        description: "Release version to deploy (must match releases/manifest.json)"
+        required: true
+        type: string
+
+env:
+  DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      api_tag: ${{ steps.manifest.outputs.api_tag }}
+      workers_tag: ${{ steps.manifest.outputs.workers_tag }}
+      db_tag: ${{ steps.manifest.outputs.db_tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read release manifest
+        id: manifest
+        run: |
+          VERSION=$(jq -r '.version' releases/manifest.json)
+          if [ "$VERSION" != "${{ inputs.confirm_version }}" ]; then
+            echo "::error::Version mismatch: manifest has ${VERSION}, input was ${{ inputs.confirm_version }}"
+            exit 1
+          fi
+          echo "api_tag=$(jq -r '.services["tachyon-api"].tag' releases/manifest.json)" >> $GITHUB_OUTPUT
+          echo "workers_tag=$(jq -r '.services["tachyon-workers"].tag' releases/manifest.json)" >> $GITHUB_OUTPUT
+          echo "db_tag=$(jq -r '.services["tachyon-db-migrate"].tag' releases/manifest.json)" >> $GITHUB_OUTPUT
+
+      - name: Verify staging deployment exists
+        run: |
+          STAGING_DEPLOYED=$(jq -r '.environments.staging.deployed_at' releases/manifest.json)
+          if [ "$STAGING_DEPLOYED" = "" ] || [ "$STAGING_DEPLOYED" = "null" ]; then
+            echo "::error::This version has not been deployed to staging yet"
+            exit 1
+          fi
+          echo "Staging deployed at: ${STAGING_DEPLOYED}"
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production  # Requires manual approval via GitHub environment protection
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_PROD_ACCESS_TOKEN }}
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production:"
+          echo "  API:     ${{ needs.validate.outputs.api_tag }}"
+          echo "  Workers: ${{ needs.validate.outputs.workers_tag }}"
+          echo "  DB:      ${{ needs.validate.outputs.db_tag }}"
+          doctl apps update ${{ secrets.DO_PROD_APP_ID }} --spec .do/app.yaml --wait
+
+      - name: Verify production health
+        run: |
+          APP_URL=$(doctl apps get ${{ secrets.DO_PROD_APP_ID }} --format DefaultIngress --no-header)
+          echo "Checking health at: https://${APP_URL}/health"
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${APP_URL}/health" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Production health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS (waiting 15s...)"
+            sleep 15
+          done
+          echo "::error::Production health check failed"
+          exit 1
+
+      - name: Update release manifest
+        run: |
+          jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+             --arg by "${{ github.actor }}" \
+             '.environments.production.deployed_at = $ts |
+              .environments.production.deployed_by = $by |
+              .environments.production.approved_by = $by' \
+             releases/manifest.json > releases/manifest.tmp.json
+          mv releases/manifest.tmp.json releases/manifest.json
+
+      - name: Commit manifest update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add releases/manifest.json
+          git commit -m "chore: update production release manifest [v${{ inputs.confirm_version }}]"
+          git push

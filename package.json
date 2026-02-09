@@ -1,0 +1,20 @@
+{
+  "name": "tachyon-infra",
+  "version": "1.0.0",
+  "description": "Tachyon infrastructure-as-code: Docker Compose, App Spec, CI/CD templates",
+  "private": true,
+  "scripts": {
+    "validate:yaml": "npx yaml-lint docker-compose.yml docker-compose.test.yml .do/app.yaml",
+    "validate:env": "bash scripts/validate-env.sh",
+    "validate": "npm run validate:yaml && npm run validate:env",
+    "setup": "bash scripts/setup.sh"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "globals": "^17.3.0",
+    "jiti": "^2.6.1",
+    "typescript-eslint": "^8.55.0",
+    "yaml-lint": "^1.7.0"
+  }
+}
