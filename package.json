@@ -10,6 +10,11 @@
     "setup": "bash scripts/setup.sh"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "globals": "^17.3.0",
+    "jiti": "^2.6.1",
+    "typescript-eslint": "^8.55.0",
     "yaml-lint": "^1.7.0"
   }
 }

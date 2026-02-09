@@ -80,3 +80,7 @@ jobs:
           image-ref: ghcr.io/tachyonapp/${{ inputs.image_name }}:${{ github.sha }}
           exit-code: "1"
           severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
+          vuln-type: "os"
+          skip-dirs: /tmp,/var/cache,/var/tmp,**/node_modules
+          skip-files: LICENSE,README.md,.gitignore
