@@ -1,0 +1,80 @@
+# Tachyon Integration Test Environment
+# =============================================================================
+# USAGE
+# =============================================================================
+# - docker compose -f docker-compose.test.yml up --abort-on-container-exit
+# =============================================================================
+
+
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: tachyon_test
+      POSTGRES_USER: tachyon
+      POSTGRES_PASSWORD: tachyon_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tachyon -d tachyon_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - tachyon-test
+    # No persistent volume -- test data is ephemeral
+
+  redis-test:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - tachyon-test
+    # No persistent volume -- test data is ephemeral
+
+  db-migrate-test:
+    build:
+      context: ../tachyon-db
+    environment:
+      MIGRATION_ENV: local
+      POSTGRES_HOST: postgres-test
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: tachyon_test
+      POSTGRES_USER: tachyon
+      POSTGRES_PASSWORD: tachyon_test
+      POSTGRES_SSL: "false"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    networks:
+      - tachyon-test
+    restart: "no"
+
+  api-test:
+    build:
+      context: ../tachyon-api
+    environment:
+      NODE_ENV: test
+      PORT: "4000"
+      POSTGRES_HOST: postgres-test
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: tachyon_test
+      POSTGRES_USER: tachyon
+      POSTGRES_PASSWORD: tachyon_test
+      POSTGRES_SSL: "false"
+      REDIS_HOST: redis-test
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      REDIS_TLS: "false"
+    depends_on:
+      db-migrate-test:
+        condition: service_completed_successfully
+      redis-test:
+        condition: service_healthy
+    networks:
+      - tachyon-test
+
+networks:
+  tachyon-test:
+    driver: bridge

@@ -1,0 +1,97 @@
+# DigitalOcean App Platfrom Staging CD Workflow
+# =============================================================================
+# NOTES
+# =============================================================================
+# - Triggered manually from the infra repo (not auto-triggered by GHCR updates)
+# =============================================================================
+name: Deploy to Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_sha:
+        description: "tachyon-api image SHA (leave empty for latest)"
+        required: false
+        type: string
+      workers_sha:
+        description: "tachyon-workers image SHA (leave empty for latest)"
+        required: false
+        type: string
+      db_sha:
+        description: "tachyon-db-migrate image SHA (leave empty for latest)"
+        required: false
+        type: string
+
+env:
+  DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Resolve image tags
+        id: tags
+        run: |
+          API_TAG="${{ inputs.api_sha || 'latest' }}"
+          WORKERS_TAG="${{ inputs.workers_sha || 'latest' }}"
+          DB_TAG="${{ inputs.db_sha || 'latest' }}"
+          echo "api_tag=${API_TAG}" >> $GITHUB_OUTPUT
+          echo "workers_tag=${WORKERS_TAG}" >> $GITHUB_OUTPUT
+          echo "db_tag=${DB_TAG}" >> $GITHUB_OUTPUT
+
+      - name: Update App Spec with image tags
+        run: |
+          sed -i "s|tag: latest|tag: ${{ steps.tags.outputs.api_tag }}|" .do/app.yaml
+          # Note: This is a simplified approach. In practice, use yq for precise YAML manipulation.
+
+      - name: Deploy to App Platform
+        run: |
+          doctl apps update ${{ secrets.DO_APP_ID }} --spec .do/app.yaml --wait
+
+      - name: Verify deployment health
+        run: |
+          APP_URL=$(doctl apps get ${{ secrets.DO_APP_ID }} --format DefaultIngress --no-header)
+          echo "Checking health at: https://${APP_URL}/health"
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${APP_URL}/health" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS (waiting 15s...)"
+            sleep 15
+          done
+          echo "Health check failed after 10 attempts"
+          exit 1
+
+      - name: Update release manifest
+        run: |
+          jq --arg api "${{ steps.tags.outputs.api_tag }}" \
+             --arg workers "${{ steps.tags.outputs.workers_tag }}" \
+             --arg db "${{ steps.tags.outputs.db_tag }}" \
+             --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+             --arg by "${{ github.actor }}" \
+             '.services["tachyon-api"].tag = $api |
+              .services["tachyon-workers"].tag = $workers |
+              .services["tachyon-db-migrate"].tag = $db |
+              .environments.staging.deployed_at = $ts |
+              .environments.staging.deployed_by = $by' \
+             releases/manifest.json > releases/manifest.tmp.json
+          mv releases/manifest.tmp.json releases/manifest.json
+
+      - name: Commit manifest update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add releases/manifest.json
+          git commit -m "chore: update staging release manifest" || echo "No changes"
+          git push
+

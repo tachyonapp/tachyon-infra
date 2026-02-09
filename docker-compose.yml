@@ -1,0 +1,231 @@
+# Tachyon Local Development - Docker Compose
+# =============================================================================
+# USAGE
+# =============================================================================
+# - `docker compose up` -- Build from sibling repos (default)
+# - `docker compose --profile ghcr up` -- Pull pre-built images from GHCR
+# - `docker compose up postgres redis` -- Infrastructure only (when working on a single service repo locally with `npm run dev`)
+# =============================================================================
+
+
+# --- Infrastructure Services ---
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tachyon-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: tachyon_dev
+      POSTGRES_USER: tachyon
+      POSTGRES_PASSWORD: tachyon_local_dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tachyon -d tachyon_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tachyon
+
+  redis:
+    image: redis:7-alpine
+    container_name: tachyon-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tachyon
+
+  # --- Application Services (build from sibling repos) ---
+  api:
+    build:
+      context: ../tachyon-api
+      target: production
+    container_name: tachyon-api
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      PORT: "4000"
+      LOG_LEVEL: debug
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: tachyon_dev
+      POSTGRES_USER: tachyon
+      POSTGRES_PASSWORD: tachyon_local_dev
+      POSTGRES_SSL: "false"
+      POSTGRES_MAX_CONNECTIONS: "20"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      REDIS_TLS: "false"
+      CORS_ORIGIN: http://localhost:8081
+    volumes:
+      - ../tachyon-api/src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    networks:
+      - tachyon
+    profiles:
+      - default
+      - build
+  workers:
+    build:
+      context: ../tachyon-workers
+      target: production
+    container_name: tachyon-workers
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      REDIS_TLS: "false"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: tachyon_dev
+      POSTGRES_USER: tachyon
+      POSTGRES_PASSWORD: tachyon_local_dev
+      POSTGRES_SSL: "false"
+      BULLMQ_CONCURRENCY: "5"
+    volumes:
+      - ../tachyon-workers/src:/app/src
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - tachyon
+    profiles:
+      - default
+      - build
+
+  db-migrate:
+    build:
+      context: ../tachyon-db
+      target: production
+    container_name: tachyon-db-migrate
+    environment:
+      MIGRATION_ENV: local
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: tachyon_dev
+      POSTGRES_USER: tachyon
+      POSTGRES_PASSWORD: tachyon_local_dev
+      POSTGRES_SSL: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tachyon
+    profiles:
+      - default
+      - build
+    restart: "no"
+
+# --- Application Services (pull from GHCR) ---
+  api-ghcr:
+    image: ghcr.io/tachyonapp/tachyon-api:latest
+    container_name: tachyon-api
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      PORT: "4000"
+      LOG_LEVEL: debug
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: tachyon_dev
+      POSTGRES_USER: tachyon
+      POSTGRES_PASSWORD: tachyon_local_dev
+      POSTGRES_SSL: "false"
+      POSTGRES_MAX_CONNECTIONS: "20"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      REDIS_TLS: "false"
+      CORS_ORIGIN: http://localhost:8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    networks:
+      - tachyon
+    profiles:
+      - ghcr
+
+  workers-ghcr:
+    image: ghcr.io/tachyonapp/tachyon-workers:latest
+    container_name: tachyon-workers
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      REDIS_TLS: "false"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: tachyon_dev
+      POSTGRES_USER: tachyon
+      POSTGRES_PASSWORD: tachyon_local_dev
+      POSTGRES_SSL: "false"
+      BULLMQ_CONCURRENCY: "5"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - tachyon
+    profiles:
+      - ghcr
+
+  db-migrate-ghcr:
+    image: ghcr.io/tachyonapp/tachyon-db-migrate:latest
+    container_name: tachyon-db-migrate
+    environment:
+      MIGRATION_ENV: local
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: tachyon_dev
+      POSTGRES_USER: tachyon
+      POSTGRES_PASSWORD: tachyon_local_dev
+      POSTGRES_SSL: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tachyon
+    profiles:
+      - ghcr
+    restart: "no"
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  tachyon:
+    driver: bridge
