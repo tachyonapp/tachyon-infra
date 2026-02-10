@@ -59,9 +59,3 @@ else
   echo "[ERROR] Environment variable inconsistencies found."
   exit 1
 fi
-```
-
-3. **Make both scripts executable:**
-
-```bash
-chmod +x scripts/setup.sh scripts/validate-env.sh

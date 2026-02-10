@@ -46,7 +46,7 @@ jobs:
           # Check required top-level keys exist
           python3 -c "
           import yaml, sys
-          with open('.do/app.yaml') as f:
+          with open('.do/app.yml') as f:
               spec = yaml.safe_load(f)
           required = ['name', 'region', 'services', 'databases']
           missing = [k for k in required if k not in spec]
