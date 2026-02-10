@@ -4,7 +4,7 @@
   "description": "Tachyon infrastructure-as-code: Docker Compose, App Spec, CI/CD templates",
   "private": true,
   "scripts": {
-    "validate:yaml": "npx yaml-lint docker-compose.yml docker-compose.test.yml .do/app.yaml",
+    "validate:yaml": "npx yaml-lint docker-compose.yml docker-compose.test.yml .do/app.yml",
     "validate:env": "bash scripts/validate-env.sh",
     "validate": "npm run validate:yaml && npm run validate:env",
     "setup": "bash scripts/setup.sh"

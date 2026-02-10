@@ -49,12 +49,12 @@ jobs:
 
       - name: Update App Spec with image tags
         run: |
-          sed -i "s|tag: latest|tag: ${{ steps.tags.outputs.api_tag }}|" .do/app.yaml
+          sed -i "s|tag: latest|tag: ${{ steps.tags.outputs.api_tag }}|" .do/app.yml
           # Note: This is a simplified approach. In practice, use yq for precise YAML manipulation.
 
       - name: Deploy to App Platform
         run: |
-          doctl apps update ${{ secrets.DO_APP_ID }} --spec .do/app.yaml --wait
+          doctl apps update ${{ secrets.DO_APP_ID }} --spec .do/app.yml --wait
 
       - name: Verify deployment health
         run: |

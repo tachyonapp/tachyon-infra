@@ -1,50 +1,52 @@
 # =============================================================================
 # Tachyon Node.js Service Dockerfile Template
 # =============================================================================
-# Usage: Copy to your service repos and customize the COPY and CMD instructions.
+# Usage: Copy to your service repo and customize the COPY and CMD instructions.
 # Base image pinned for supply chain security. Update digest periodically.
 # =============================================================================
 
 # --- Build Stage ---
-    FROM node:20-alpine AS builder
+FROM node:20-alpine AS builder
 
-    WORKDIR /app
-    
-    # Install dependencies first (layer caching)
-    COPY package.json package-lock.json ./
-    RUN npm ci --ignore-scripts
-    
-    # Copy source and build
-    COPY tsconfig.json ./
-    COPY src/ ./src/
-    RUN npm run build
-    
-    # --- Production Stage ---
-    FROM node:20-alpine AS production
-    
-    # Security: non-root user
-    RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-    
-    WORKDIR /app
-    
-    # Install production dependencies only
-    COPY package.json package-lock.json ./
-    RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
-    
-    # Copy built output from builder
-    COPY --from=builder /app/dist ./dist
-    
-    # Build args for version tracking
-    ARG GIT_COMMIT_SHA=unknown
-    ENV GIT_COMMIT_SHA=${GIT_COMMIT_SHA}
-    
-    # Security: run as non-root
-    USER appuser
-    
-    # Health check (override per service)
-    HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-      CMD wget --no-verbose --tries=1 --spider http://localhost:4000/health || exit 1
-    
-    EXPOSE 4000
-    
-    CMD ["node", "dist/index.js"]
+# set working directory inside the docker container's filesystem
+# command npm ci runs from /app dir
+WORKDIR /app
+
+# Install dependencies first (layer caching)
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
+# Copy source and build
+COPY tsconfig.json ./
+COPY src/ ./src/
+RUN npm run build
+
+# --- Production Stage ---
+FROM node:20-alpine AS production
+
+# Security: non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
+
+# Install production dependencies only
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+
+# Copy built output from builder
+COPY --from=builder /app/dist ./dist
+
+# Build args for version tracking
+ARG GIT_COMMIT_SHA=unknown
+ENV GIT_COMMIT_SHA=${GIT_COMMIT_SHA}
+
+# Security: run as non-root
+USER appuser
+
+# Health check (override per service)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:4000/health || exit 1
+
+EXPOSE 4000
+
+CMD ["node", "dist/index.js"]
