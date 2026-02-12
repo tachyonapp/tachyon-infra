@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Tachyon is a mobile-first AI trading platform ("Gamified Trading Bot Arena") where users build customizable AI trading bots that propose trades for user approval. The project is in the planning/pre-implementation phase -- the `app/`, `client/`, and `server/` directories are scaffolded but empty. The full MVP spec lives in `.claude/docs/product/technical_product_spec.md`.
+Tachyon is a mobile-first AI trading platform ("Gamified Trading Bot Arena") where users build customizable AI trading bots that propose trades for user approval. The project is in the planning/pre-implementation phase -- The full MVP spec lives in `.claude/docs/product/technical_product_spec.md`. This project will consist of several sibling directories under a single GitHub organization. 
+
+This repository is the tachyon-infra directory. It will serve as the infrastrcture service layer for the tachyon application.
 
 ## Tech Stack (Planned)
 

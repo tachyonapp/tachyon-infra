@@ -2,9 +2,22 @@
 # =============================================================================
 # USAGE
 # =============================================================================
-# - `docker compose up` -- Build from sibling repos (default)
-# - `docker compose --profile ghcr up` -- Pull pre-built images from GHCR
-# - `docker compose up postgres redis` -- Infrastructure only (when working on a single service repo locally with `npm run dev`)
+# - `docker compose up`                  -- Build from sibling repos (default)
+# - `docker compose --profile ghcr up`   -- Pull pre-built images from GHCR
+# - `docker compose up postgres redis`   -- Infrastructure only (for local `npm run dev`)
+# =============================================================================
+# PROFILE STRATEGY
+# =============================================================================
+# Services WITHOUT a `profiles` key start by default with `docker compose up`.
+# Services WITH a `profiles` key are opt-in and only start when that profile
+# is explicitly activated via `--profile <name>`.
+#
+# Build-from-source services (api, workers, db-migrate) have NO profile, so
+# they start automatically. GHCR services are gated behind `profiles: [ghcr]`.
+#
+# IMPORTANT: Build and GHCR variants share the same container_name (e.g.
+# tachyon-api), so they are mutually exclusive -- Docker will refuse to start
+# both simultaneously.
 # =============================================================================
 
 
@@ -45,6 +58,7 @@ services:
       - tachyon
 
   # --- Application Services (build from sibling repos) ---
+  # No `profiles` key = these start by default with `docker compose up`
   api:
     build:
       context: ../tachyon-api
@@ -83,9 +97,7 @@ services:
       retries: 3
     networks:
       - tachyon
-    profiles:
-      - default
-      - build
+
   workers:
     build:
       context: ../tachyon-workers
@@ -112,9 +124,6 @@ services:
         condition: service_healthy
     networks:
       - tachyon
-    profiles:
-      - default
-      - build
 
   db-migrate:
     build:
@@ -134,12 +143,11 @@ services:
         condition: service_healthy
     networks:
       - tachyon
-    profiles:
-      - default
-      - build
     restart: "no"
 
-# --- Application Services (pull from GHCR) ---
+  # --- Application Services (pull from GHCR) ---
+  # Opt-in via `docker compose --profile ghcr up`. Shares container_name with
+  # build-from-source variants above, so only one mode can run at a time.
   api-ghcr:
     image: ghcr.io/tachyonapp/tachyon-api:latest
     container_name: tachyon-api
