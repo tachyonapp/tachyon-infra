@@ -59,10 +59,17 @@ services:
 
   # --- Application Services (build from sibling repos) ---
   # No `profiles` key = these start by default with `docker compose up`
+  #
+  # BUILD TARGET: `builder` (not `production`)
+  # The builder stage includes all dependencies (including devDeps like `tsx`)
+  # and the full source. Combined with volume mounts for `src/` and `tsx watch`
+  # commands, this enables hot reload -- source changes on the host are reflected
+  # inside the container immediately without rebuilding the image.
   api:
     build:
       context: ../tachyon-api
-      target: production
+      target: builder
+    command: npx tsx watch src/index.ts
     container_name: tachyon-api
     ports:
       - "4000:4000"
@@ -103,7 +110,8 @@ services:
   workers:
     build:
       context: ../tachyon-workers
-      target: production
+      target: builder
+    command: npx tsx watch src/index.ts
     container_name: tachyon-workers
     environment:
       NODE_ENV: development
@@ -134,7 +142,8 @@ services:
   db-migrate:
     build:
       context: ../tachyon-db
-      target: production
+      target: builder
+    command: npx tsx src/migrate.ts
     container_name: tachyon-db-migrate
     environment:
       MIGRATION_ENV: local
@@ -144,6 +153,8 @@ services:
       POSTGRES_USER: tachyon
       POSTGRES_PASSWORD: tachyon_local_dev
       POSTGRES_SSL: "false"
+    volumes:
+      - ../tachyon-db/src:/app/src
     depends_on:
       postgres:
         condition: service_healthy
