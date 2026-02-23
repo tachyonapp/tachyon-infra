@@ -20,5 +20,7 @@
 
 ## Release Management
 
+See [`releases/README.md`](releases/README.md) for the full release manifest format, field reference, and deployment workflow integration.
+
 ## Troubleshooting
 

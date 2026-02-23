@@ -7,10 +7,12 @@
     "validate:yaml": "npx yaml-lint docker-compose.yml docker-compose.test.yml .do/app.yml",
     "validate:env": "bash scripts/validate-env.sh",
     "validate": "npm run validate:yaml && npm run validate:env",
-    "setup": "bash scripts/setup.sh"
+    "setup": "bash scripts/setup.sh",
+    "lint": "eslint . --fix"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@eslint/json": "^0.14.0",
     "eslint": "^9.39.2",
     "globals": "^17.3.0",
     "jiti": "^2.6.1",
