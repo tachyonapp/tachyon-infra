@@ -1,12 +1,24 @@
+# Digital Ocean App Spec
+# =============================================================================
+# This App Spec uses the image approach not git - here's why: 
+#
+# 1. Each service repo has its own CI workflow that builds a docker image and pushes it to GHCR
+# 2. This app spec references those images from ghcr.io/tachyonapp/*
+# 3. The deployment workflows in this tachyon-infra tell DO to pull those images
+# 
+# =============================================================================
 # **Note:** The `production: false` flag on databases and `APP_ENV: staging` are defaults for the staging spec. 
-# For production deployment, these values will be overridden (Task 14 handles the production deployment workflow).
+# For production deployment, these values will be overridden 
+# 
+# TODO:: (Task 14 handles the production deployment workflow).
+# =============================================================================
 name: tachyon
 region: nyc
 
 services:
   - name: tachyon-api
     image:
-      registry_type: ghcr
+      registry_type: GHCR
       registry: tachyonapp
       repository: tachyon-api
       tag: latest
@@ -58,9 +70,10 @@ services:
       - key: GIT_COMMIT_SHA
         value: "${_self.COMMIT_HASH}"
 
+workers:
   - name: tachyon-workers
     image:
-      registry_type: ghcr
+      registry_type: GHCR
       registry: tachyonapp
       repository: tachyon-workers
       tag: latest
@@ -98,10 +111,11 @@ services:
       - key: GIT_COMMIT_SHA
         value: "${_self.COMMIT_HASH}"
 
+
 jobs:
   - name: db-migrate
     image:
-      registry_type: ghcr
+      registry_type: GHCR
       registry: tachyonapp
       repository: tachyon-db-migrate
       tag: latest
