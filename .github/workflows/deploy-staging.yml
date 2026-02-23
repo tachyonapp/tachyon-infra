@@ -1,8 +1,38 @@
-# DigitalOcean App Platfrom Staging CD Workflow
+# DigitalOcean App Platform — Staging CD Workflow
 # =============================================================================
-# NOTES
+#
+# HOW IT WORKS
 # =============================================================================
-# - Triggered manually from the infra repo (not auto-triggered by GHCR updates)
+#
+# This workflow deploys Tachyon services to the DigitalOcean App Platform
+# staging environment. It is triggered manually (workflow_dispatch) from the
+# GitHub Actions UI — it is NOT auto-triggered by GHCR image pushes.
+#
+# Flow:
+#   1. Developer triggers the workflow, optionally providing specific commit
+#      SHAs for each service image. Any omitted SHA defaults to "latest".
+#   2. The resolved image tags are written into the DO App Spec (.do/app.yml)
+#      using Python/PyYAML to target each component (services, workers, jobs)
+#      individually — (avoiding a naive global find-and-replace.)
+#   3. doctl pushes the updated App Spec to DigitalOcean, which pulls the
+#      specified images from GHCR and deploys them. The --wait flag blocks
+#      until DO reports the deployment is complete.
+#   4. A health check loop polls the API's /health endpoint up to 10 times
+#      (15s intervals, ~2.5 min total). If it never returns HTTP 200, the
+#      entire workflow fails.
+#   5. On success, the release manifest (releases/manifest.json) is updated
+#      with the deployed SHAs, timestamp, and actor — then committed and
+#      pushed back to the repo. This manifest is what the production deploy
+#      workflow reads to ensure prod receives the same versions validated
+#      in staging.
+#
+# Required GitHub Secrets:
+#   - DIGITALOCEAN_ACCESS_TOKEN  — DO API token for staging
+#   - DO_APP_ID                  — Staging App Platform app ID
+#
+# Required GitHub Environment:
+#   - staging
+#
 # =============================================================================
 name: Deploy to Staging
 
@@ -37,6 +67,8 @@ jobs:
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
+      # Resolve each service's image tag. If the operator didn't provide a
+      # specific SHA, fall back to "latest" (the most recent main build).
       - name: Resolve image tags
         id: tags
         run: |
@@ -47,6 +79,10 @@ jobs:
           echo "workers_tag=${WORKERS_TAG}" >> $GITHUB_OUTPUT
           echo "db_tag=${DB_TAG}" >> $GITHUB_OUTPUT
 
+      # Rewrite the App Spec's image tags per-component. Uses Python/PyYAML
+      # (pre-installed on ubuntu-latest) to walk services, workers, and jobs
+      # individually rather than a blind sed that would set all three to the
+      # same value.
       - name: Update App Spec with image tags
         run: |
           python3 -c "
@@ -76,10 +112,14 @@ jobs:
           print('App Spec updated with image tags')
           "
 
+      # Push the updated App Spec to DigitalOcean. --wait blocks until the
+      # platform finishes deploying (or fails).
       - name: Deploy to App Platform
         run: |
           doctl apps update ${{ secrets.DO_APP_ID }} --spec .do/app.yml --wait
 
+      # Poll the API health endpoint. Retries up to 10 times at 15s intervals
+      # (~2.5 min). Exits non-zero if the service never becomes healthy.
       - name: Verify deployment health
         run: |
           APP_URL=$(doctl apps get ${{ secrets.DO_APP_ID }} --format DefaultIngress --no-header)
@@ -96,6 +136,10 @@ jobs:
           echo "Health check failed after 10 attempts"
           exit 1
 
+      # Write the deployed SHAs and metadata into the release manifest.
+      # Both .sha and .tag are updated to keep them in sync. The production
+      # deploy workflow reads this manifest to guarantee it deploys the exact
+      # same versions that were validated in staging.
       - name: Update release manifest
         run: |
           jq --arg api "${{ steps.tags.outputs.api_tag }}" \
@@ -114,6 +158,8 @@ jobs:
              releases/manifest.json > releases/manifest.tmp.json
           mv releases/manifest.tmp.json releases/manifest.json
 
+      # Commit the updated manifest back to the repo so the production
+      # deploy workflow can read the staging-validated versions.
       - name: Commit manifest update
         run: |
           git config user.name "github-actions[bot]"
@@ -121,4 +167,3 @@ jobs:
           git add releases/manifest.json
           git commit -m "chore: update staging release manifest" || echo "No changes"
           git push
-
