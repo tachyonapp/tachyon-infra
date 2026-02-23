@@ -66,7 +66,8 @@ jobs:
 
       - name: Check image size
         run: |
-          SIZE=$(docker inspect ghcr.io/tachyonapp/${{ inputs.image_name }}:${{ github.sha }} --format='{{.Size}}' 2>/dev/null || echo "0")
+          docker pull ghcr.io/tachyonapp/${{ inputs.image_name }}:${{ github.sha }}
+          SIZE=$(docker image inspect ghcr.io/tachyonapp/${{ inputs.image_name }}:${{ github.sha }} --format='{{.Size}}')
           SIZE_MB=$((SIZE / 1024 / 1024))
           echo "Image size: ${SIZE_MB}MB (limit: ${{ inputs.max_image_size_mb }}MB)"
           if [ "$SIZE_MB" -gt "${{ inputs.max_image_size_mb }}" ]; then
