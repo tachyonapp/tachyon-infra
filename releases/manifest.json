@@ -1,0 +1,33 @@
+{
+  "version": "0.1.0",
+  "created_at": "",
+  "description": "Initial infrastructure stub release",
+  "services": {
+    "tachyon-api": {
+      "sha": "",
+      "image": "ghcr.io/tachyonapp/tachyon-api",
+      "tag": ""
+    },
+    "tachyon-workers": {
+      "sha": "",
+      "image": "ghcr.io/tachyonapp/tachyon-workers",
+      "tag": ""
+    },
+    "tachyon-db-migrate": {
+      "sha": "",
+      "image": "ghcr.io/tachyonapp/tachyon-db-migrate",
+      "tag": ""
+    }
+  },
+  "environments": {
+    "staging": {
+      "deployed_at": "",
+      "deployed_by": ""
+    },
+    "production": {
+      "deployed_at": "",
+      "deployed_by": "",
+      "approved_by": ""
+    }
+  }
+}
