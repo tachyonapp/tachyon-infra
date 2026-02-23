@@ -48,7 +48,7 @@ jobs:
           import yaml, sys
           with open('.do/app.yml') as f:
               spec = yaml.safe_load(f)
-          required = ['name', 'region', 'services', 'databases']
+          required = ['name', 'region', 'services', 'workers', 'jobs', 'databases']
           missing = [k for k in required if k not in spec]
           if missing:
               print(f'Missing required keys: {missing}')

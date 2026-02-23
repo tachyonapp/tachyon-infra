@@ -49,8 +49,32 @@ jobs:
 
       - name: Update App Spec with image tags
         run: |
-          sed -i "s|tag: latest|tag: ${{ steps.tags.outputs.api_tag }}|" .do/app.yml
-          # Note: This is a simplified approach. In practice, use yq for precise YAML manipulation.
+          python3 -c "
+          import yaml, sys
+
+          with open('.do/app.yml') as f:
+              spec = yaml.safe_load(f)
+
+          tags = {
+              'tachyon-api': '${{ steps.tags.outputs.api_tag }}',
+              'tachyon-workers': '${{ steps.tags.outputs.workers_tag }}',
+              'tachyon-db-migrate': '${{ steps.tags.outputs.db_tag }}',
+          }
+
+          for svc in spec.get('services', []):
+              if svc['name'] in tags:
+                  svc['image']['tag'] = tags[svc['name']]
+          for wkr in spec.get('workers', []):
+              if wkr['name'] in tags:
+                  wkr['image']['tag'] = tags[wkr['name']]
+          for job in spec.get('jobs', []):
+              if job['name'] in tags:
+                  job['image']['tag'] = tags[job['name']]
+
+          with open('.do/app.yml', 'w') as f:
+              yaml.dump(spec, f, default_flow_style=False, sort_keys=False)
+          print('App Spec updated with image tags')
+          "
 
       - name: Deploy to App Platform
         run: |
@@ -79,8 +103,11 @@ jobs:
              --arg db "${{ steps.tags.outputs.db_tag }}" \
              --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
              --arg by "${{ github.actor }}" \
-             '.services["tachyon-api"].tag = $api |
+             '.services["tachyon-api"].sha = $api |
+              .services["tachyon-api"].tag = $api |
+              .services["tachyon-workers"].sha = $workers |
               .services["tachyon-workers"].tag = $workers |
+              .services["tachyon-db-migrate"].sha = $db |
               .services["tachyon-db-migrate"].tag = $db |
               .environments.staging.deployed_at = $ts |
               .environments.staging.deployed_by = $by' \
