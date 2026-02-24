@@ -26,8 +26,9 @@ This repo does **NOT** contain application source code. It is the single source 
 
 ```
 tachyon-infra/
-├── .do/                          # DigitalOcean App Spec
-│   └── app.yml                   # Full App Platform topology definition
+├── .do/                          # DigitalOcean App Specs
+│   ├── app.staging.yml           # Staging App Platform topology (APP_ENV=staging, production: false)
+│   └── app.prod.yml              # Production App Platform topology (APP_ENV=production, production: true)
 ├── .github/
 │   └── workflows/
 │       ├── build-push.yml        # Reusable: build & push Docker image to GHCR
@@ -224,7 +225,7 @@ Service repos use two reusable workflow templates defined in this repo:
 ```
 PR opened / push to main
   └─ validate.yml runs in parallel:
-       ├─ YAML lint (docker-compose.yml, docker-compose.test.yml, .do/app.yml)
+       ├─ YAML lint (docker-compose.yml, docker-compose.test.yml, .do/app.staging.yml, .do/app.prod.yml)
        ├─ env schema validation (validate-env.sh)
        ├─ App Spec structure check (required keys)
        └─ secret scan (TruffleHog)

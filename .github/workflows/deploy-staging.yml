@@ -11,7 +11,7 @@
 # Flow:
 #   1. Developer triggers the workflow, optionally providing specific commit
 #      SHAs for each service image. Any omitted SHA defaults to "latest".
-#   2. The resolved image tags are written into the DO App Spec (.do/app.yml)
+#   2. The resolved image tags are written into the DO App Spec (.do/app.staging.yml)
 #      using Python/PyYAML to target each component (services, workers, jobs)
 #      individually — (avoiding a naive global find-and-replace.)
 #   3. doctl pushes the updated App Spec to DigitalOcean, which pulls the
@@ -88,7 +88,7 @@ jobs:
           python3 -c "
           import yaml, sys
 
-          with open('.do/app.yml') as f:
+          with open('.do/app.staging.yml') as f:
               spec = yaml.safe_load(f)
 
           tags = {
@@ -107,7 +107,7 @@ jobs:
               if job['name'] in tags:
                   job['image']['tag'] = tags[job['name']]
 
-          with open('.do/app.yml', 'w') as f:
+          with open('.do/app.staging.yml', 'w') as f:
               yaml.dump(spec, f, default_flow_style=False, sort_keys=False)
           print('App Spec updated with image tags')
           "
@@ -116,7 +116,7 @@ jobs:
       # platform finishes deploying (or fails).
       - name: Deploy to App Platform
         run: |
-          doctl apps update ${{ secrets.DO_APP_ID }} --spec .do/app.yml --wait
+          doctl apps update ${{ secrets.DO_APP_ID }} --spec .do/app.staging.yml --wait
 
       # Poll the API health endpoint. Retries up to 10 times at 15s intervals
       # (~2.5 min). Exits non-zero if the service never becomes healthy.

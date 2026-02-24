@@ -18,7 +18,7 @@
 #   3. GitHub pauses at the deploy job and waits for a required reviewer to
 #      approve (configured via the "production" environment protection rule).
 #   4. Once approved, the resolved image tags from the manifest are written
-#      into the DO App Spec (.do/app.yml) using Python/PyYAML — the same
+#      into the DO App Spec (.do/app.prod.yml) using Python/PyYAML — the same
 #      approach as the staging workflow.
 #   5. doctl pushes the updated App Spec to DigitalOcean. The --wait flag
 #      blocks until the platform finishes deploying (or fails).
@@ -97,7 +97,7 @@ jobs:
           python3 -c "
           import yaml, sys
 
-          with open('.do/app.yml') as f:
+          with open('.do/app.prod.yml') as f:
               spec = yaml.safe_load(f)
 
           tags = {
@@ -116,14 +116,14 @@ jobs:
               if job['name'] in tags:
                   job['image']['tag'] = tags[job['name']]
 
-          with open('.do/app.yml', 'w') as f:
+          with open('.do/app.prod.yml', 'w') as f:
               yaml.dump(spec, f, default_flow_style=False, sort_keys=False)
           print('App Spec updated with production image tags')
           "
 
       - name: Deploy to production
         run: |
-          doctl apps update ${{ secrets.DO_PROD_APP_ID }} --spec .do/app.yml --wait
+          doctl apps update ${{ secrets.DO_PROD_APP_ID }} --spec .do/app.prod.yml --wait
 
       - name: Verify production health
         run: |
