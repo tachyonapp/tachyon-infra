@@ -150,7 +150,7 @@ databases:
     version: "7"
     size: db-s-1vcpu-1gb
     num_nodes: 1
-    production: false
+    production: true
 
 envs:
   - key: APP_ENV
