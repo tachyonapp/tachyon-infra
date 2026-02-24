@@ -6,12 +6,13 @@
 #
 # Key staging defaults:
 #   - APP_ENV: staging
-#   - databases.production: false  (DO non-production tier)
+#   - postgres: production: false  (DO non-production tier)
+#   - valkey: production: true, cluster_name: tachyon-valkey-staging (pre-provisioned)
 #
 # See app.prod.yml for the production spec.
 # =============================================================================
 name: tachyon-staging
-region: nyc
+region: nyc3
 
 services:
   - name: tachyon-api
@@ -54,14 +55,14 @@ services:
         value: "true"
       - key: POSTGRES_MAX_CONNECTIONS
         value: "20"
-      - key: REDIS_HOST
-        value: "${tachyon-redis.HOSTNAME}"
-      - key: REDIS_PORT
-        value: "${tachyon-redis.PORT}"
-      - key: REDIS_PASSWORD
-        value: "${tachyon-redis.PASSWORD}"
+      - key: VALKEY_HOST
+        value: "${tachyon-valkey.HOSTNAME}"
+      - key: VALKEY_PORT
+        value: "${tachyon-valkey.PORT}"
+      - key: VALKEY_PASSWORD
+        value: "${tachyon-valkey.PASSWORD}"
         type: SECRET
-      - key: REDIS_TLS
+      - key: VALKEY_TLS
         value: "true"
       - key: CORS_ORIGIN
         value: "https://tachyon.app"
@@ -82,14 +83,14 @@ workers:
         value: "${APP_ENV}"
       - key: LOG_LEVEL
         value: "info"
-      - key: REDIS_HOST
-        value: "${tachyon-redis.HOSTNAME}"
-      - key: REDIS_PORT
-        value: "${tachyon-redis.PORT}"
-      - key: REDIS_PASSWORD
-        value: "${tachyon-redis.PASSWORD}"
+      - key: VALKEY_HOST
+        value: "${tachyon-valkey.HOSTNAME}"
+      - key: VALKEY_PORT
+        value: "${tachyon-valkey.PORT}"
+      - key: VALKEY_PASSWORD
+        value: "${tachyon-valkey.PASSWORD}"
         type: SECRET
-      - key: REDIS_TLS
+      - key: VALKEY_TLS
         value: "true"
       - key: POSTGRES_HOST
         value: "${tachyon-pg.HOSTNAME}"
@@ -145,12 +146,13 @@ databases:
     num_nodes: 1
     production: false
 
-  - name: tachyon-redis
-    engine: REDIS
-    version: "7"
+  - name: tachyon-valkey
+    engine: VALKEY
+    version: "8"
     size: db-s-1vcpu-1gb
     num_nodes: 1
     production: true
+    cluster_name: tachyon-valkey-staging
 
 envs:
   - key: APP_ENV

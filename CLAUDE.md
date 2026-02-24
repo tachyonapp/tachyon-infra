@@ -14,7 +14,7 @@ This repository is the tachyon-infra directory. It will serve as the infrastrctu
 - **Auth:** Auth0
 - **API:** GraphQL (primary) + REST (webhooks)
 - **Databases:** PostgreSQL + Weaviate
-- **Queue:** Redis + BullMQ
+- **Queue:** Valkey + BullMQ
 - **Infra:** DigitalOcean, Docker
 - **Observability:** Sentry
 - **AI:** TBD
@@ -26,7 +26,7 @@ This repository is the tachyon-infra directory. It will serve as the infrastrctu
         |
 [GraphQL API Gateway] -- [Postgres]
         |
-[Job Queue / Workers - Redis + BullMQ]
+[Job Queue / Workers - ValKey + BullMQ]
         |
 [Broker Adapter] <-> [Broker API]
 ```

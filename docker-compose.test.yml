@@ -22,10 +22,10 @@ services:
       - tachyon-test
     # No persistent volume -- test data is ephemeral
 
-  redis-test:
-    image: redis:7-alpine
+  valkey-test:
+    image: valkey/valkey:8-alpine
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -63,14 +63,14 @@ services:
       POSTGRES_USER: tachyon
       POSTGRES_PASSWORD: tachyon_test
       POSTGRES_SSL: "false"
-      REDIS_HOST: redis-test
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: ""
-      REDIS_TLS: "false"
+      VALKEY_HOST: valkey-test
+      VALKEY_PORT: "6379"
+      VALKEY_PASSWORD: ""
+      VALKEY_TLS: "false"
     depends_on:
       db-migrate-test:
         condition: service_completed_successfully
-      redis-test:
+      valkey-test:
         condition: service_healthy
     networks:
       - tachyon-test
