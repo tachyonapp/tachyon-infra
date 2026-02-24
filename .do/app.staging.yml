@@ -35,7 +35,7 @@ services:
       - path: /
     envs:
       - key: NODE_ENV
-        value: "${APP_ENV}"
+        value: "staging"
       - key: PORT
         value: "4000"
       - key: LOG_LEVEL
@@ -80,7 +80,7 @@ workers:
     instance_size_slug: professional-xs
     envs:
       - key: NODE_ENV
-        value: "${APP_ENV}"
+        value: "staging"
       - key: LOG_LEVEL
         value: "info"
       - key: VALKEY_HOST
@@ -123,7 +123,7 @@ jobs:
     kind: PRE_DEPLOY
     envs:
       - key: MIGRATION_ENV
-        value: "${APP_ENV}"
+        value: "staging"
       - key: POSTGRES_HOST
         value: "${tachyon-pg.HOSTNAME}"
       - key: POSTGRES_PORT
