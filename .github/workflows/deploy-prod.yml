@@ -1,8 +1,39 @@
-# DigitalOcean App Platfrom Production CD Workflow
+# DigitalOcean App Platform — Production CD Workflow
 # =============================================================================
-# NOTES
+#
+# HOW IT WORKS
 # =============================================================================
-# - Requires manual approval via GitHub Actions environment protection rules.
+#
+# This workflow deploys Tachyon services to the DigitalOcean App Platform
+# production environment. It requires manual approval via GitHub Actions
+# environment protection rules and enforces that the exact same image SHAs
+# validated in staging are deployed to production.
+#
+# Flow:
+#   1. Developer triggers the workflow with the release version string (must
+#      match the version field in releases/manifest.json).
+#   2. The validate job reads the manifest to extract pinned image SHAs and
+#      verifies that staging has been deployed for this version. If either
+#      check fails, the workflow aborts before the approval gate.
+#   3. GitHub pauses at the deploy job and waits for a required reviewer to
+#      approve (configured via the "production" environment protection rule).
+#   4. Once approved, the resolved image tags from the manifest are written
+#      into the DO App Spec (.do/app.yml) using Python/PyYAML — the same
+#      approach as the staging workflow.
+#   5. doctl pushes the updated App Spec to DigitalOcean. The --wait flag
+#      blocks until the platform finishes deploying (or fails).
+#   6. A health check loop polls the API's /health endpoint up to 10 times
+#      (15s intervals, ~2.5 min total).
+#   7. On success, the release manifest is updated with production deployment
+#      metadata, then committed and pushed back to the repo.
+#
+# Required GitHub Secrets:
+#   - DIGITALOCEAN_PROD_ACCESS_TOKEN  — DO API token for production
+#   - DO_PROD_APP_ID                  — Production App Platform app ID
+#
+# Required GitHub Environment:
+#   - production (with required reviewers configured)
+#
 # =============================================================================
 name: Deploy to Production
 
@@ -13,9 +44,6 @@ on:
         description: "Release version to deploy (must match releases/manifest.json)"
         required: true
         type: string
-
-env:
-  DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
 jobs:
   validate:
@@ -60,12 +88,41 @@ jobs:
         with:
           token: ${{ secrets.DIGITALOCEAN_PROD_ACCESS_TOKEN }}
 
+      # Rewrite the App Spec's image tags using the manifest-pinned SHAs from
+      # the validate job. These are the exact same versions deployed to staging,
+      # enforcing promotion integrity. Uses Python/PyYAML (pre-installed on
+      # ubuntu-latest) to target each component individually.
+      - name: Update App Spec with image tags
+        run: |
+          python3 -c "
+          import yaml, sys
+
+          with open('.do/app.yml') as f:
+              spec = yaml.safe_load(f)
+
+          tags = {
+              'tachyon-api': '${{ needs.validate.outputs.api_tag }}',
+              'tachyon-workers': '${{ needs.validate.outputs.workers_tag }}',
+              'tachyon-db-migrate': '${{ needs.validate.outputs.db_tag }}',
+          }
+
+          for svc in spec.get('services', []):
+              if svc['name'] in tags:
+                  svc['image']['tag'] = tags[svc['name']]
+          for wkr in spec.get('workers', []):
+              if wkr['name'] in tags:
+                  wkr['image']['tag'] = tags[wkr['name']]
+          for job in spec.get('jobs', []):
+              if job['name'] in tags:
+                  job['image']['tag'] = tags[job['name']]
+
+          with open('.do/app.yml', 'w') as f:
+              yaml.dump(spec, f, default_flow_style=False, sort_keys=False)
+          print('App Spec updated with production image tags')
+          "
+
       - name: Deploy to production
         run: |
-          echo "Deploying to production:"
-          echo "  API:     ${{ needs.validate.outputs.api_tag }}"
-          echo "  Workers: ${{ needs.validate.outputs.workers_tag }}"
-          echo "  DB:      ${{ needs.validate.outputs.db_tag }}"
           doctl apps update ${{ secrets.DO_PROD_APP_ID }} --spec .do/app.yml --wait
 
       - name: Verify production health
