@@ -1,0 +1,157 @@
+# DigitalOcean App Spec — Staging
+# =============================================================================
+# Uses pre-built Docker images from GHCR (not git source).
+# Each service CI workflow builds and pushes its image; deploy-staging.yml
+# patches the image tags here before calling doctl apps update.
+#
+# Key staging defaults:
+#   - APP_ENV: staging
+#   - databases.production: false  (DO non-production tier)
+#
+# See app.prod.yml for the production spec.
+# =============================================================================
+name: tachyon-staging
+region: nyc
+
+services:
+  - name: tachyon-api
+    image:
+      registry_type: GHCR
+      registry: tachyonapp
+      repository: tachyon-api
+      tag: latest
+    instance_count: 1
+    instance_size_slug: professional-xs
+    http_port: 4000
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 10
+      period_seconds: 30
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    routes:
+      - path: /
+    envs:
+      - key: NODE_ENV
+        value: "${APP_ENV}"
+      - key: PORT
+        value: "4000"
+      - key: LOG_LEVEL
+        value: "info"
+      - key: POSTGRES_HOST
+        value: "${tachyon-pg.HOSTNAME}"
+      - key: POSTGRES_PORT
+        value: "${tachyon-pg.PORT}"
+      - key: POSTGRES_DB
+        value: "${tachyon-pg.DATABASE}"
+      - key: POSTGRES_USER
+        value: "${tachyon-pg.USERNAME}"
+      - key: POSTGRES_PASSWORD
+        value: "${tachyon-pg.PASSWORD}"
+        type: SECRET
+      - key: POSTGRES_SSL
+        value: "true"
+      - key: POSTGRES_MAX_CONNECTIONS
+        value: "20"
+      - key: REDIS_HOST
+        value: "${tachyon-redis.HOSTNAME}"
+      - key: REDIS_PORT
+        value: "${tachyon-redis.PORT}"
+      - key: REDIS_PASSWORD
+        value: "${tachyon-redis.PASSWORD}"
+        type: SECRET
+      - key: REDIS_TLS
+        value: "true"
+      - key: CORS_ORIGIN
+        value: "https://tachyon.app"
+      - key: GIT_COMMIT_SHA
+        value: "${_self.COMMIT_HASH}"
+
+workers:
+  - name: tachyon-workers
+    image:
+      registry_type: GHCR
+      registry: tachyonapp
+      repository: tachyon-workers
+      tag: latest
+    instance_count: 1
+    instance_size_slug: professional-xs
+    envs:
+      - key: NODE_ENV
+        value: "${APP_ENV}"
+      - key: LOG_LEVEL
+        value: "info"
+      - key: REDIS_HOST
+        value: "${tachyon-redis.HOSTNAME}"
+      - key: REDIS_PORT
+        value: "${tachyon-redis.PORT}"
+      - key: REDIS_PASSWORD
+        value: "${tachyon-redis.PASSWORD}"
+        type: SECRET
+      - key: REDIS_TLS
+        value: "true"
+      - key: POSTGRES_HOST
+        value: "${tachyon-pg.HOSTNAME}"
+      - key: POSTGRES_PORT
+        value: "${tachyon-pg.PORT}"
+      - key: POSTGRES_DB
+        value: "${tachyon-pg.DATABASE}"
+      - key: POSTGRES_USER
+        value: "${tachyon-pg.USERNAME}"
+      - key: POSTGRES_PASSWORD
+        value: "${tachyon-pg.PASSWORD}"
+        type: SECRET
+      - key: POSTGRES_SSL
+        value: "true"
+      - key: BULLMQ_CONCURRENCY
+        value: "5"
+      - key: GIT_COMMIT_SHA
+        value: "${_self.COMMIT_HASH}"
+
+
+jobs:
+  - name: db-migrate
+    image:
+      registry_type: GHCR
+      registry: tachyonapp
+      repository: tachyon-db-migrate
+      tag: latest
+    instance_size_slug: professional-xs
+    instance_count: 1
+    kind: PRE_DEPLOY
+    envs:
+      - key: MIGRATION_ENV
+        value: "${APP_ENV}"
+      - key: POSTGRES_HOST
+        value: "${tachyon-pg.HOSTNAME}"
+      - key: POSTGRES_PORT
+        value: "${tachyon-pg.PORT}"
+      - key: POSTGRES_DB
+        value: "${tachyon-pg.DATABASE}"
+      - key: POSTGRES_USER
+        value: "${tachyon-pg.USERNAME}"
+      - key: POSTGRES_PASSWORD
+        value: "${tachyon-pg.PASSWORD}"
+        type: SECRET
+      - key: POSTGRES_SSL
+        value: "true"
+
+databases:
+  - name: tachyon-pg
+    engine: PG
+    version: "16"
+    size: db-s-1vcpu-1gb
+    num_nodes: 1
+    production: false
+
+  - name: tachyon-redis
+    engine: REDIS
+    version: "7"
+    size: db-s-1vcpu-1gb
+    num_nodes: 1
+    production: false
+
+envs:
+  - key: APP_ENV
+    value: "staging"

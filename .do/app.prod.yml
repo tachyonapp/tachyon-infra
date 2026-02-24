@@ -1,18 +1,17 @@
-# Digital Ocean App Spec
+# DigitalOcean App Spec — Production
 # =============================================================================
-# This App Spec uses the image approach not git - here's why: 
+# Uses pre-built Docker images from GHCR (not git source).
+# Each service CI workflow builds and pushes its image; deploy-prod.yml
+# patches the image tags here (from releases/manifest.json) before calling
+# doctl apps update.
 #
-# 1. Each service repo has its own CI workflow that builds a docker image and pushes it to GHCR
-# 2. This app spec references those images from ghcr.io/tachyonapp/*
-# 3. The deployment workflows in this tachyon-infra tell DO to pull those images
-# 
+# Key production differences from app.staging.yml:
+#   - APP_ENV: production
+#   - databases.production: true  (DO production tier — enables HA, backups)
+#
+# See app.staging.yml for the staging spec.
 # =============================================================================
-# **Note:** The `production: false` flag on databases and `APP_ENV: staging` are defaults for the staging spec. 
-# For production deployment, these values will be overridden 
-# 
-# TODO:: (Task 14 handles the production deployment workflow).
-# =============================================================================
-name: tachyon
+name: tachyon-production
 region: nyc
 
 services:
@@ -111,7 +110,6 @@ workers:
       - key: GIT_COMMIT_SHA
         value: "${_self.COMMIT_HASH}"
 
-
 jobs:
   - name: db-migrate
     image:
@@ -145,15 +143,15 @@ databases:
     version: "16"
     size: db-s-1vcpu-1gb
     num_nodes: 1
-    production: false
+    production: true
 
   - name: tachyon-redis
     engine: REDIS
     version: "7"
     size: db-s-1vcpu-1gb
     num_nodes: 1
-    production: false
+    production: true
 
 envs:
   - key: APP_ENV
-    value: "staging"
+    value: "production"

@@ -43,17 +43,23 @@ jobs:
 
       - name: Validate App Spec structure
         run: |
-          # Check required top-level keys exist
+          # Check required top-level keys exist in both specs
           python3 -c "
           import yaml, sys
-          with open('.do/app.yml') as f:
-              spec = yaml.safe_load(f)
+          specs = ['.do/app.staging.yml', '.do/app.prod.yml']
           required = ['name', 'region', 'services', 'workers', 'jobs', 'databases']
-          missing = [k for k in required if k not in spec]
-          if missing:
-              print(f'Missing required keys: {missing}')
+          all_ok = True
+          for path in specs:
+              with open(path) as f:
+                  spec = yaml.safe_load(f)
+              missing = [k for k in required if k not in spec]
+              if missing:
+                  print(f'{path}: missing required keys: {missing}')
+                  all_ok = False
+              else:
+                  print(f'{path}: structure valid')
+          if not all_ok:
               sys.exit(1)
-          print('App Spec structure valid')
           "
 
   secret-scan:
