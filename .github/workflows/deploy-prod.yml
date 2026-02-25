@@ -80,6 +80,8 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     environment: production  # Requires manual approval via GitHub environment protection
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 

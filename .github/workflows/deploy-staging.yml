@@ -59,6 +59,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: staging
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
