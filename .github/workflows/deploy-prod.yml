@@ -127,7 +127,7 @@ jobs:
 
       - name: Verify production health
         run: |
-          APP_URL=$(doctl apps get ${{ secrets.DO_PROD_APP_ID }} --output json | jq -r '.default_ingress')
+          APP_URL=$(doctl apps get ${{ secrets.DO_PROD_APP_ID }} --output json | jq -r '.[0].default_ingress')
           echo "Checking health at: https://${APP_URL}/health"
           for i in {1..10}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${APP_URL}/health" || echo "000")
