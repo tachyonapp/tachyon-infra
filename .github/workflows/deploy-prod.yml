@@ -128,9 +128,9 @@ jobs:
       - name: Verify production health
         run: |
           APP_URL=$(doctl apps get ${{ secrets.DO_PROD_APP_ID }} --output json | jq -r '.[0].default_ingress')
-          echo "Checking health at: https://${APP_URL}/health"
+          echo "Checking health at: ${APP_URL}/health"
           for i in {1..10}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${APP_URL}/health" || echo "000")
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${APP_URL}/health" || echo "000")
             if [ "$STATUS" = "200" ]; then
               echo "Production health check passed!"
               exit 0
