@@ -1,22 +1,22 @@
 {
   "version": "0.1.0",
-  "created_at": "",
-  "description": "Initial infrastructure stub release",
+  "created_at": "2026-02-25T20:51:18Z",
+  "description": "",
   "services": {
     "tachyon-api": {
-      "sha": "",
+      "sha": "ab509108269c0562b38837d94fea84231e34f9b6",
       "image": "ghcr.io/tachyonapp/tachyon-api",
-      "tag": ""
+      "tag": "ab509108269c0562b38837d94fea84231e34f9b6"
     },
     "tachyon-workers": {
-      "sha": "",
+      "sha": "af6a9443f9bbd95a06cd11a03a4c5c3bbfc519a9",
       "image": "ghcr.io/tachyonapp/tachyon-workers",
-      "tag": ""
+      "tag": "af6a9443f9bbd95a06cd11a03a4c5c3bbfc519a9"
     },
     "tachyon-db-migrate": {
-      "sha": "",
+      "sha": "1f3805c7301fa74d999693165e2fdd062efadb27",
       "image": "ghcr.io/tachyonapp/tachyon-db-migrate",
-      "tag": ""
+      "tag": "1f3805c7301fa74d999693165e2fdd062efadb27"
     }
   },
   "environments": {
