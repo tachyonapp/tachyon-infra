@@ -8,8 +8,11 @@
 # Key production differences from app.staging.yml:
 #   - APP_ENV: production
 #   - databases.production: true  (DO production tier — enables HA, backups)
+
+#  NOTE: When production: true is set, DigitalOcean treats the database as a 
+#        reference to an existing managed cluster rather than creating a new one
+#        so cluster_name becomes required
 #
-# See app.staging.yml for the staging spec.
 # =============================================================================
 name: tachyon-production
 region: nyc3
@@ -144,6 +147,7 @@ databases:
     size: db-s-1vcpu-1gb
     num_nodes: 1
     production: true
+    cluster_name: tachyon-pg-production
 
   - name: tachyon-valkey
     engine: VALKEY
