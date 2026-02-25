@@ -4,25 +4,25 @@
   "description": "",
   "services": {
     "tachyon-api": {
-      "sha": "ab509108269c0562b38837d94fea84231e34f9b6",
+      "sha": "latest",
       "image": "ghcr.io/tachyonapp/tachyon-api",
-      "tag": "ab509108269c0562b38837d94fea84231e34f9b6"
+      "tag": "latest"
     },
     "tachyon-workers": {
-      "sha": "af6a9443f9bbd95a06cd11a03a4c5c3bbfc519a9",
+      "sha": "latest",
       "image": "ghcr.io/tachyonapp/tachyon-workers",
-      "tag": "af6a9443f9bbd95a06cd11a03a4c5c3bbfc519a9"
+      "tag": "latest"
     },
     "tachyon-db-migrate": {
-      "sha": "1f3805c7301fa74d999693165e2fdd062efadb27",
+      "sha": "latest",
       "image": "ghcr.io/tachyonapp/tachyon-db-migrate",
-      "tag": "1f3805c7301fa74d999693165e2fdd062efadb27"
+      "tag": "latest"
     }
   },
   "environments": {
     "staging": {
-      "deployed_at": "",
-      "deployed_by": ""
+      "deployed_at": "2026-02-25T21:46:45Z",
+      "deployed_by": "MarcZenn"
     },
     "production": {
       "deployed_at": "",
