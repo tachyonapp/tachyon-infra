@@ -16,7 +16,7 @@ This repo does **NOT** contain application source code. It is the single source 
 |------|---------|------------|
 | [`tachyon-infra`](https://github.com/tachyonapp/tachyon-infra) | IaC hub — Docker Compose, App Spec, CI/CD, env schemas | `../tachyon-infra` |
 | [`tachyon-api`](https://github.com/tachyonapp/tachyon-api) | GraphQL API gateway (Express + TypeScript) | `../tachyon-api` |
-| [`tachyon-workers`](https://github.com/tachyonapp/tachyon-workers) | Background job processing (BullMQ + Redis) | `../tachyon-workers` |
+| [`tachyon-workers`](https://github.com/tachyonapp/tachyon-workers) | Background job processing (BullMQ + ValKey) | `../tachyon-workers` |
 | [`tachyon-db`](https://github.com/tachyonapp/tachyon-db) | Database schema and migration runner (PostgreSQL) | `../tachyon-db` |
 | [`tachyon-mobile`](https://github.com/tachyonapp/tachyon-mobile) | React Native mobile app (Expo) | `../tachyon-mobile` |
 
@@ -97,7 +97,7 @@ Expected response:
   "status": "healthy",
   "version": "unknown",
   "timestamp": "2026-01-01T00:00:00.000Z",
-  "checks": { "postgres": "connected", "redis": "connected" }
+  "checks": { "postgres": "connected", "valkey": "connected" }
 }
 ```
 
@@ -133,10 +133,10 @@ Requires `docker login ghcr.io` with a GitHub PAT that has `read:packages` scope
 
 **Mode 3 — Infrastructure only**
 
-Starts only PostgreSQL and Redis. Use when running a single service locally with `npm run dev`.
+Starts only PostgreSQL and ValKey. Use when running a single service locally with `npm run dev`.
 
 ```bash
-docker compose up postgres redis
+docker compose up postgres valkey
 ```
 
 Then in the service repo:
@@ -313,7 +313,7 @@ See [`releases/README.md`](releases/README.md) for the full manifest format, fie
 
 **Port already in use (5432 or 6379)**
 
-Another PostgreSQL or Redis instance is running locally. Stop it or change the host port in `docker-compose.yml`.
+Another PostgreSQL or ValKey instance is running locally. Stop it or change the host port in `docker-compose.yml`.
 
 ```bash
 # Find what's using the port
