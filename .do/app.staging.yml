@@ -6,7 +6,7 @@
 #
 # Key staging defaults:
 #   - APP_ENV: staging
-#   - postgres: production: false  (DO non-production tier)
+#   - postgres: production: true, cluster_name: tachyon-pg-staging (pre-provisioned standalone cluster)
 #   - valkey: production: true, cluster_name: tachyon-valkey-staging (pre-provisioned)
 #
 # See app.prod.yml for the production spec.
@@ -40,27 +40,22 @@ services:
         value: "4000"
       - key: LOG_LEVEL
         value: "info"
-      - key: POSTGRES_HOST
-        value: "${tachyon-pg.HOSTNAME}"
-      - key: POSTGRES_PORT
-        value: "${tachyon-pg.PORT}"
-      - key: POSTGRES_DB
-        value: "${tachyon-pg.DATABASE}"
-      - key: POSTGRES_USER
-        value: "${tachyon-pg.USERNAME}"
-      - key: POSTGRES_PASSWORD
-        value: "${tachyon-pg.PASSWORD}"
+      - key: DATABASE_URL
+        value: ""
         type: SECRET
       - key: POSTGRES_SSL
         value: "true"
       - key: POSTGRES_MAX_CONNECTIONS
         value: "20"
+      - key: DB_ENCRYPTION_KEY
+        value: ""
+        type: SECRET
       - key: VALKEY_HOST
-        value: "${tachyon-valkey.HOSTNAME}"
+        value: "${tachyon-valkey-staging.HOSTNAME}"
       - key: VALKEY_PORT
-        value: "${tachyon-valkey.PORT}"
+        value: "${tachyon-valkey-staging.PORT}"
       - key: VALKEY_PASSWORD
-        value: "${tachyon-valkey.PASSWORD}"
+        value: "${tachyon-valkey-staging.PASSWORD}"
         type: SECRET
       - key: VALKEY_TLS
         value: "true"
@@ -84,27 +79,22 @@ workers:
       - key: LOG_LEVEL
         value: "info"
       - key: VALKEY_HOST
-        value: "${tachyon-valkey.HOSTNAME}"
+        value: "${tachyon-valkey-staging.HOSTNAME}"
       - key: VALKEY_PORT
-        value: "${tachyon-valkey.PORT}"
+        value: "${tachyon-valkey-staging.PORT}"
       - key: VALKEY_PASSWORD
-        value: "${tachyon-valkey.PASSWORD}"
+        value: "${tachyon-valkey-staging.PASSWORD}"
         type: SECRET
       - key: VALKEY_TLS
         value: "true"
-      - key: POSTGRES_HOST
-        value: "${tachyon-pg.HOSTNAME}"
-      - key: POSTGRES_PORT
-        value: "${tachyon-pg.PORT}"
-      - key: POSTGRES_DB
-        value: "${tachyon-pg.DATABASE}"
-      - key: POSTGRES_USER
-        value: "${tachyon-pg.USERNAME}"
-      - key: POSTGRES_PASSWORD
-        value: "${tachyon-pg.PASSWORD}"
+      - key: DATABASE_URL
+        value: ""
         type: SECRET
       - key: POSTGRES_SSL
         value: "true"
+      - key: DB_ENCRYPTION_KEY
+        value: ""
+        type: SECRET
       - key: BULLMQ_CONCURRENCY
         value: "5"
       - key: GIT_COMMIT_SHA
@@ -124,29 +114,20 @@ jobs:
     envs:
       - key: MIGRATION_ENV
         value: "staging"
-      - key: POSTGRES_HOST
-        value: "${tachyon-pg.HOSTNAME}"
-      - key: POSTGRES_PORT
-        value: "${tachyon-pg.PORT}"
-      - key: POSTGRES_DB
-        value: "${tachyon-pg.DATABASE}"
-      - key: POSTGRES_USER
-        value: "${tachyon-pg.USERNAME}"
-      - key: POSTGRES_PASSWORD
-        value: "${tachyon-pg.PASSWORD}"
+      - key: DATABASE_URL
+        value: ""
         type: SECRET
-      - key: POSTGRES_SSL
-        value: "true"
 
 databases:
-  - name: tachyon-pg
+  - name: tachyon-pg-staging
     engine: PG
     version: "16"
     size: db-s-1vcpu-1gb
     num_nodes: 1
-    production: false
+    production: true
+    cluster_name: tachyon-pg-staging
 
-  - name: tachyon-valkey
+  - name: tachyon-valkey-staging
     engine: VALKEY
     version: "8"
     size: db-s-1vcpu-1gb

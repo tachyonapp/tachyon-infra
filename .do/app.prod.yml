@@ -5,13 +5,12 @@
 # patches the image tags here (from releases/manifest.json) before calling
 # doctl apps update.
 #
-# Key production differences from app.staging.yml:
+# Key production defaults:
 #   - APP_ENV: production
-#   - databases.production: true  (DO production tier — enables HA, backups)
-
-#  NOTE: When production: true is set, DigitalOcean treats the database as a 
-#        reference to an existing managed cluster rather than creating a new one
-#        so cluster_name becomes required
+#   - postgres: production: true, cluster_name: tachyon-pg-production (pre-provisioned standalone cluster)
+#   - valkey: production: true, cluster_name: tachyon-valkey-production (pre-provisioned)
+#
+# NOTE: production: true means DO references an existing managed cluster — cluster_name is required.
 #
 # =============================================================================
 name: tachyon-production
@@ -43,21 +42,16 @@ services:
         value: "4000"
       - key: LOG_LEVEL
         value: "info"
-      - key: POSTGRES_HOST
-        value: "${tachyon-pg.HOSTNAME}"
-      - key: POSTGRES_PORT
-        value: "${tachyon-pg.PORT}"
-      - key: POSTGRES_DB
-        value: "${tachyon-pg.DATABASE}"
-      - key: POSTGRES_USER
-        value: "${tachyon-pg.USERNAME}"
-      - key: POSTGRES_PASSWORD
-        value: "${tachyon-pg.PASSWORD}"
+      - key: DATABASE_URL
+        value: ""
         type: SECRET
       - key: POSTGRES_SSL
         value: "true"
       - key: POSTGRES_MAX_CONNECTIONS
         value: "20"
+      - key: DB_ENCRYPTION_KEY
+        value: ""
+        type: SECRET
       - key: VALKEY_HOST
         value: "${tachyon-valkey.HOSTNAME}"
       - key: VALKEY_PORT
@@ -95,19 +89,14 @@ workers:
         type: SECRET
       - key: VALKEY_TLS
         value: "true"
-      - key: POSTGRES_HOST
-        value: "${tachyon-pg.HOSTNAME}"
-      - key: POSTGRES_PORT
-        value: "${tachyon-pg.PORT}"
-      - key: POSTGRES_DB
-        value: "${tachyon-pg.DATABASE}"
-      - key: POSTGRES_USER
-        value: "${tachyon-pg.USERNAME}"
-      - key: POSTGRES_PASSWORD
-        value: "${tachyon-pg.PASSWORD}"
+      - key: DATABASE_URL
+        value: ""
         type: SECRET
       - key: POSTGRES_SSL
         value: "true"
+      - key: DB_ENCRYPTION_KEY
+        value: ""
+        type: SECRET
       - key: BULLMQ_CONCURRENCY
         value: "5"
       - key: GIT_COMMIT_SHA
@@ -126,19 +115,9 @@ jobs:
     envs:
       - key: MIGRATION_ENV
         value: "production"
-      - key: POSTGRES_HOST
-        value: "${tachyon-pg.HOSTNAME}"
-      - key: POSTGRES_PORT
-        value: "${tachyon-pg.PORT}"
-      - key: POSTGRES_DB
-        value: "${tachyon-pg.DATABASE}"
-      - key: POSTGRES_USER
-        value: "${tachyon-pg.USERNAME}"
-      - key: POSTGRES_PASSWORD
-        value: "${tachyon-pg.PASSWORD}"
+      - key: DATABASE_URL
+        value: ""
         type: SECRET
-      - key: POSTGRES_SSL
-        value: "true"
 
 databases:
   - name: tachyon-pg

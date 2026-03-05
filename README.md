@@ -27,8 +27,8 @@ This repo does **NOT** contain application source code. It is the single source 
 ```
 tachyon-infra/
 ├── .do/                          # DigitalOcean App Specs
-│   ├── app.staging.yml           # Staging App Platform topology (APP_ENV=staging, production: false)
-│   └── app.prod.yml              # Production App Platform topology (APP_ENV=production, production: true)
+│   ├── app.staging.yml           # Staging App Platform topology (APP_ENV=staging, standalone PG cluster)
+│   └── app.prod.yml              # Production App Platform topology (APP_ENV=production, standalone PG cluster)
 ├── .github/
 │   └── workflows/
 │       ├── build-push.yml        # Reusable: build & push Docker image to GHCR
@@ -237,6 +237,39 @@ PR opened / push to main
 ---
 
 ## Deployment
+
+### First-Time App Provisioning
+
+Before deploying for the first time (or after destroying and recreating an app), the DO App Platform secrets must be set manually. These are not auto-bound from the cluster — they will be empty until explicitly set.
+
+**Step 1 — Create the app from the spec:**
+
+```bash
+# Staging
+doctl apps create --spec .do/app.staging.yml
+
+# Production
+doctl apps create --spec .do/app.prod.yml
+```
+
+**Step 2 — Set secrets in the DO console (or via `doctl apps update`):**
+
+Each service requires its own `DATABASE_URL` because they connect as different DB users:
+
+| App | Service | Secret | Value |
+|-----|---------|--------|-------|
+| Staging | `db-migrate` | `DATABASE_URL` | `postgres://tachyon_migrate:<pw>@<host>:<port>/<db>?sslmode=require` |
+| Staging | `tachyon-api` | `DATABASE_URL` | `postgres://tachyon_app:<pw>@<host>:<port>/<db>?sslmode=require` |
+| Staging | `tachyon-api` | `DB_ENCRYPTION_KEY` | 32-byte hex — generate with `openssl rand -hex 32` |
+| Staging | `tachyon-workers` | `DATABASE_URL` | `postgres://tachyon_app:<pw>@<host>:<port>/<db>?sslmode=require` |
+| Staging | `tachyon-workers` | `DB_ENCRYPTION_KEY` | Same value as api |
+| Production | *(same 5 secrets)* | — | Production credentials |
+
+The `tachyon_migrate` and `tachyon_app` DB users must be provisioned on the cluster before this step. See the `tachyon-db` repo's `scripts/README.md` for the SQL provisioning commands.
+
+> **Why `DATABASE_URL` is not auto-bound:** All services connect as privilege-separated users (`tachyon_app` for API/workers, `tachyon_migrate` for migrations) rather than the cluster's default `doadmin` user. DO's automatic `${component.DATABASE_URL}` binding always resolves to `doadmin` credentials and cannot be used here.
+
+---
 
 ### Staging
 
