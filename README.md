@@ -112,10 +112,13 @@ Expected response:
 Builds images from sibling repos on disk. Use when actively developing services.
 
 ```bash
+export NODE_AUTH_TOKEN=<your-github-pat>  # GitHub PAT with read:packages scope
 docker compose up
 ```
 
 Requires all service repos cloned as siblings (`../tachyon-api`, `../tachyon-workers`, `../tachyon-db`).
+
+`NODE_AUTH_TOKEN` is required so Docker can pull `@tachyonapp/tachyon-db` from GitHub Packages during the build. It is passed as a BuildKit secret and never written to any image layer.
 
 ---
 

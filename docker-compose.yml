@@ -69,6 +69,8 @@ services:
     build:
       context: ../tachyon-api
       target: builder
+      secrets:
+        - node_auth_token
     command: npx tsx watch src/index.ts
     container_name: tachyon-api
     ports:
@@ -111,6 +113,8 @@ services:
     build:
       context: ../tachyon-workers
       target: builder
+      secrets:
+        - node_auth_token
     command: npx tsx watch src/index.ts
     container_name: tachyon-workers
     environment:
@@ -260,3 +264,11 @@ volumes:
 networks:
   tachyon:
     driver: bridge
+
+# NODE_AUTH_TOKEN is required to pull @tachyonapp/tachyon-db from GitHub Packages
+# during the Docker build. Set it in your shell before running `docker compose up`:
+#   export NODE_AUTH_TOKEN=<your-github-pat>
+# The token is passed as a BuildKit secret and is never written to the image layer.
+secrets:
+  node_auth_token:
+    environment: NODE_AUTH_TOKEN
