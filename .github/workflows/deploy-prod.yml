@@ -30,6 +30,9 @@
 # Required GitHub Secrets:
 #   - DIGITALOCEAN_PROD_ACCESS_TOKEN  — DO API token for production
 #   - DO_PROD_APP_ID                  — Production App Platform app ID
+#   - PROD_DB_MIGRATE_DATABASE_URL    — postgres://tachyon_migrate:<pw>@<host>:25060/defaultdb
+#   - PROD_APP_DATABASE_URL           — postgres://tachyon_app:<pw>@<host>:25060/defaultdb
+#   - PROD_DB_ENCRYPTION_KEY          — 32-byte hex (openssl rand -hex 32)
 #
 # Required GitHub Environment:
 #   - production (with required reviewers configured)
@@ -94,10 +97,14 @@ jobs:
       # the validate job. These are the exact same versions deployed to staging,
       # enforcing promotion integrity. Uses Python/PyYAML (pre-installed on
       # ubuntu-latest) to target each component individually.
-      - name: Update App Spec with image tags
+      - name: Update App Spec with image tags and secrets
+        env:
+          DB_MIGRATE_DATABASE_URL: ${{ secrets.PROD_DB_MIGRATE_DATABASE_URL }}
+          APP_DATABASE_URL: ${{ secrets.PROD_APP_DATABASE_URL }}
+          DB_ENCRYPTION_KEY: ${{ secrets.PROD_DB_ENCRYPTION_KEY }}
         run: |
           python3 -c "
-          import yaml, sys
+          import yaml, os
 
           with open('.do/app.prod.yml') as f:
               spec = yaml.safe_load(f)
@@ -108,19 +115,44 @@ jobs:
               'tachyon-db-migrate': '${{ needs.validate.outputs.db_tag }}',
           }
 
+          component_secrets = {
+              'tachyon-api': {
+                  'DATABASE_URL': os.environ['APP_DATABASE_URL'],
+                  'DB_ENCRYPTION_KEY': os.environ['DB_ENCRYPTION_KEY'],
+              },
+              'tachyon-workers': {
+                  'DATABASE_URL': os.environ['APP_DATABASE_URL'],
+                  'DB_ENCRYPTION_KEY': os.environ['DB_ENCRYPTION_KEY'],
+              },
+              'db-migrate': {
+                  'DATABASE_URL': os.environ['DB_MIGRATE_DATABASE_URL'],
+              },
+          }
+
+          def inject_secrets(component):
+              name = component.get('name')
+              if name not in component_secrets:
+                  return
+              for env in component.get('envs', []):
+                  if env.get('key') in component_secrets[name]:
+                      env['value'] = component_secrets[name][env['key']]
+
           for svc in spec.get('services', []):
               if svc['name'] in tags:
                   svc['image']['tag'] = tags[svc['name']]
+              inject_secrets(svc)
           for wkr in spec.get('workers', []):
               if wkr['name'] in tags:
                   wkr['image']['tag'] = tags[wkr['name']]
+              inject_secrets(wkr)
           for job in spec.get('jobs', []):
               if job['name'] in tags:
                   job['image']['tag'] = tags[job['name']]
+              inject_secrets(job)
 
           with open('.do/app.prod.yml', 'w') as f:
               yaml.dump(spec, f, default_flow_style=False, sort_keys=False)
-          print('App Spec updated with production image tags')
+          print('App Spec updated with production image tags and secrets')
           "
 
       - name: Deploy to production
