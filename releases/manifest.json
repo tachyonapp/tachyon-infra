@@ -21,7 +21,7 @@
   },
   "environments": {
     "staging": {
-      "deployed_at": "2026-02-25T21:46:45Z",
+      "deployed_at": "2026-03-05T04:02:10Z",
       "deployed_by": "MarcZenn"
     },
     "production": {
