@@ -148,6 +148,9 @@ jobs:
           print('App Spec updated with image tags and secrets')
           "
 
+      - name: Debug — print resolved App Spec
+        run: cat .do/app.staging.yml
+
       # Push the updated App Spec to DigitalOcean. --wait blocks until the
       # platform finishes deploying (or fails).
       - name: Deploy to App Platform
