@@ -79,11 +79,7 @@ services:
       NODE_ENV: development
       PORT: "4000"
       LOG_LEVEL: debug
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_DB: tachyon_dev
-      POSTGRES_USER: tachyon
-      POSTGRES_PASSWORD: tachyon_local_dev
+      DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
       POSTGRES_SSL: "false"
       POSTGRES_MAX_CONNECTIONS: "20"
       VALKEY_HOST: valkey
@@ -124,11 +120,7 @@ services:
       VALKEY_PORT: "6379"
       VALKEY_PASSWORD: ""
       VALKEY_TLS: "false"
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_DB: tachyon_dev
-      POSTGRES_USER: tachyon
-      POSTGRES_PASSWORD: tachyon_local_dev
+      DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
       POSTGRES_SSL: "false"
       BULLMQ_CONCURRENCY: "5"
     volumes:
@@ -151,12 +143,7 @@ services:
     container_name: tachyon-db-migrate
     environment:
       MIGRATION_ENV: local
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_DB: tachyon_dev
-      POSTGRES_USER: tachyon
-      POSTGRES_PASSWORD: tachyon_local_dev
-      POSTGRES_SSL: "false"
+      DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
     volumes:
       - ../tachyon-db/src:/app/src
     depends_on:
@@ -178,11 +165,7 @@ services:
       NODE_ENV: development
       PORT: "4000"
       LOG_LEVEL: debug
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_DB: tachyon_dev
-      POSTGRES_USER: tachyon
-      POSTGRES_PASSWORD: tachyon_local_dev
+      DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
       POSTGRES_SSL: "false"
       POSTGRES_MAX_CONNECTIONS: "20"
       VALKEY_HOST: valkey
@@ -218,11 +201,7 @@ services:
       VALKEY_PORT: "6379"
       VALKEY_PASSWORD: ""
       VALKEY_TLS: "false"
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_DB: tachyon_dev
-      POSTGRES_USER: tachyon
-      POSTGRES_PASSWORD: tachyon_local_dev
+      DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
       POSTGRES_SSL: "false"
       BULLMQ_CONCURRENCY: "5"
     depends_on:
@@ -242,12 +221,7 @@ services:
     container_name: tachyon-db-migrate
     environment:
       MIGRATION_ENV: local
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_DB: tachyon_dev
-      POSTGRES_USER: tachyon
-      POSTGRES_PASSWORD: tachyon_local_dev
-      POSTGRES_SSL: "false"
+      DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
     depends_on:
       postgres:
         condition: service_healthy
