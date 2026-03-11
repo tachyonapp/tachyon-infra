@@ -24,7 +24,7 @@
 # --- Infrastructure Services ---
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     container_name: tachyon-postgres
     ports:
       - "5432:5432"
