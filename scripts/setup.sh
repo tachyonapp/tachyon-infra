@@ -15,7 +15,7 @@ INFRA_DIR="$(dirname "$SCRIPT_DIR")"
 PARENT_DIR="$(dirname "$INFRA_DIR")"
 
 ORG="tachyonapp"
-REPOS=("tachyon-api" "tachyon-workers" "tachyon-db" "tachyon-mobile")
+REPOS=("tachyon-api" "tachyon-workers" "tachyon-db" "tachyon-mobile" "tachyon-queue-types")
 
 echo "=== Tachyon Development Setup ==="
 echo "Infra directory: ${INFRA_DIR}"
