@@ -122,7 +122,7 @@ jobs:
 databases:
   - name: tachyon-pg
     engine: PG
-    version: "16"
+    version: "18"
     size: db-s-1vcpu-1gb
     num_nodes: 1
     production: true
