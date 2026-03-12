@@ -150,6 +150,18 @@ cp ../tachyon-infra/env/.env.local.example .env.local
 npm run dev
 ```
 
+### Bull Board Dashboard
+
+After running `docker compose up` (build-from-source mode), the BullMQ job queue dashboard is available at:
+
+```
+http://localhost:4000/internal/bull-board
+```
+
+No authentication is required in local development. All 6 queues (`scan:dispatch`, `scan:bot`, `expiry`, `reconciliation`, `notification`, `summary`) are visible once the workers service has started.
+
+> **Note:** Bull Board is only available in build-from-source mode (`docker compose up`). It is not available in GHCR mode (`--profile ghcr`) because the production image excludes devDependencies.
+
 ### Hot Reload
 
 In build mode, `docker-compose.yml` mounts `../tachyon-api/src` and `../tachyon-workers/src` into the running containers. Changes to source files are reflected immediately when services are started with `tsx watch`.
@@ -202,6 +214,19 @@ Check that all environment files define the same set of variables:
 ```
 
 This is also run automatically in CI (`validate.yml`).
+
+Run this locally whenever you:
+- Add a new environment variable to any service
+- Remove an environment variable
+- Change which environments a variable applies to
+
+**What it checks:** Every variable in `env/.env.example` (the master schema) must be present in `.env.local.example` and `.env.staging.example`. Variables intentionally absent from production (e.g. `BULL_BOARD_USERNAME`, `BULL_BOARD_PASSWORD`) are listed in the `PRODUCTION_EXCLUDED_VARS` array at the top of `scripts/validate-env.sh` and skipped when validating `.env.production.example`.
+
+**Adding a new variable:**
+1. Add it to `env/.env.example` with a comment explaining its purpose and which service uses it
+2. Add it to `env/.env.local.example`, `env/.env.staging.example`, and `env/.env.production.example` (or only the environments it applies to)
+3. If it is intentionally absent from production, add its name to `PRODUCTION_EXCLUDED_VARS` in `scripts/validate-env.sh`
+4. Run `./scripts/validate-env.sh` to confirm zero failures before committing
 
 ---
 

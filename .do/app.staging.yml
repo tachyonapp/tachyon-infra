@@ -61,6 +61,12 @@ services:
         value: "true"
       - key: CORS_ORIGIN
         value: "https://tachyon.app"
+      - key: BULL_BOARD_USERNAME
+        value: ""
+        type: SECRET
+      - key: BULL_BOARD_PASSWORD
+        value: ""
+        type: SECRET
       - key: GIT_COMMIT_SHA
         value: "${_self.COMMIT_HASH}"
 
@@ -97,6 +103,9 @@ workers:
         type: SECRET
       - key: BULLMQ_CONCURRENCY
         value: "5"
+      - key: SENTRY_DSN
+        value: ""
+        type: SECRET
       - key: GIT_COMMIT_SHA
         value: "${_self.COMMIT_HASH}"
 

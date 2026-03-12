@@ -87,6 +87,8 @@ services:
       VALKEY_PASSWORD: ""
       VALKEY_TLS: "false"
       CORS_ORIGIN: http://localhost:8081
+      BULL_BOARD_USERNAME: ""
+      BULL_BOARD_PASSWORD: ""
     volumes:
       - ../tachyon-api/src:/app/src
     depends_on:
@@ -123,6 +125,7 @@ services:
       DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
       POSTGRES_SSL: "false"
       BULLMQ_CONCURRENCY: "5"
+      SENTRY_DSN: ""
     volumes:
       - ../tachyon-workers/src:/app/src
     depends_on:
@@ -173,6 +176,8 @@ services:
       VALKEY_PASSWORD: ""
       VALKEY_TLS: "false"
       CORS_ORIGIN: http://localhost:8081
+      BULL_BOARD_USERNAME: ""
+      BULL_BOARD_PASSWORD: ""
     depends_on:
       postgres:
         condition: service_healthy
@@ -204,6 +209,7 @@ services:
       DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
       POSTGRES_SSL: "false"
       BULLMQ_CONCURRENCY: "5"
+      SENTRY_DSN: ""
     depends_on:
       postgres:
         condition: service_healthy
