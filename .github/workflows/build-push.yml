@@ -60,7 +60,6 @@ jobs:
             GIT_COMMIT_SHA=${{ github.sha }}
           tags: |
             ghcr.io/tachyonapp/${{ inputs.image_name }}:${{ github.sha }}
-            ghcr.io/tachyonapp/${{ inputs.image_name }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
