@@ -99,6 +99,9 @@ workers:
         type: SECRET
       - key: BULLMQ_CONCURRENCY
         value: "5"
+      - key: SENTRY_DSN
+        value: ""
+        type: SECRET
       - key: GIT_COMMIT_SHA
         value: "${_self.COMMIT_HASH}"
 
