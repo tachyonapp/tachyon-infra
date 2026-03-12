@@ -43,15 +43,15 @@ on:
   workflow_dispatch:
     inputs:
       api_sha:
-        description: "tachyon-api image SHA (leave empty for latest)"
+        description: "tachyon-api commit SHA (leave empty to auto-resolve latest main)"
         required: false
         type: string
       workers_sha:
-        description: "tachyon-workers image SHA (leave empty for latest)"
+        description: "tachyon-workers commit SHA (leave empty to auto-resolve latest main)"
         required: false
         type: string
       db_sha:
-        description: "tachyon-db-migrate image SHA (leave empty for latest)"
+        description: "tachyon-db-migrate commit SHA (leave empty to auto-resolve latest main)"
         required: false
         type: string
 
@@ -72,17 +72,35 @@ jobs:
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-      # Resolve each service's image tag. If the operator didn't provide a
-      # specific SHA, fall back to "latest" (the most recent main build).
+      # Resolve each service's image tag to a specific commit SHA.
+      # If the operator didn't provide a SHA, query the GitHub API for the
+      # latest commit on main for that service repo. This ensures DO App Platform
+      # always receives a unique, unambiguous tag and never relies on a cached
+      # 'latest' reference that may silently point to a stale image.
       - name: Resolve image tags
         id: tags
+        env:
+          GH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
         run: |
-          API_TAG="${{ inputs.api_sha || 'latest' }}"
-          WORKERS_TAG="${{ inputs.workers_sha || 'latest' }}"
-          DB_TAG="${{ inputs.db_sha || 'latest' }}"
+          resolve_sha() {
+            local input="$1"
+            local repo="$2"
+            if [ -n "$input" ]; then
+              echo "$input"
+            else
+              gh api "repos/tachyonapp/${repo}/commits/main" --jq '.sha'
+            fi
+          }
+
+          API_TAG=$(resolve_sha "${{ inputs.api_sha }}" "tachyon-api")
+          WORKERS_TAG=$(resolve_sha "${{ inputs.workers_sha }}" "tachyon-workers")
+          DB_TAG=$(resolve_sha "${{ inputs.db_sha }}" "tachyon-db")
+
           echo "api_tag=${API_TAG}" >> $GITHUB_OUTPUT
           echo "workers_tag=${WORKERS_TAG}" >> $GITHUB_OUTPUT
           echo "db_tag=${DB_TAG}" >> $GITHUB_OUTPUT
+
+          echo "Resolved tags — api: ${API_TAG} | workers: ${WORKERS_TAG} | db: ${DB_TAG}"
 
       # Rewrite the App Spec's image tags per-component. Uses Python/PyYAML
       # (pre-installed on ubuntu-latest) to walk services, workers, and jobs
