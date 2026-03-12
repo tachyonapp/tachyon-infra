@@ -37,11 +37,34 @@ done
 # Get active vars from the schema (excluding future/commented vars)
 SCHEMA_VARS=$(extract_vars "${ENV_DIR}/.env.example")
 
+# Variables intentionally absent from production (dev/staging only).
+# Add to this list when a variable is deliberately excluded from .env.production.example.
+PRODUCTION_EXCLUDED_VARS=(
+  "BULL_BOARD_USERNAME"
+  "BULL_BOARD_PASSWORD"
+)
+
+# Build a filtered schema for production by removing excluded vars
+production_schema() {
+  local vars="$SCHEMA_VARS"
+  for var in "${PRODUCTION_EXCLUDED_VARS[@]}"; do
+    vars=$(echo "$vars" | grep -v "^${var}$")
+  done
+  echo "$vars"
+}
+
 # Check each environment file has all schema vars
 ALL_OK=true
 for FILE in ".env.local.example" ".env.staging.example" ".env.production.example"; do
   ENV_VARS=$(extract_vars "${ENV_DIR}/${FILE}")
-  MISSING=$(comm -23 <(echo "$SCHEMA_VARS") <(echo "$ENV_VARS"))
+
+  if [ "$FILE" = ".env.production.example" ]; then
+    EXPECTED=$(production_schema)
+  else
+    EXPECTED="$SCHEMA_VARS"
+  fi
+
+  MISSING=$(comm -23 <(echo "$EXPECTED") <(echo "$ENV_VARS"))
   if [ -n "$MISSING" ]; then
     echo "[FAIL] ${FILE} missing variables:"
     echo "$MISSING" | sed 's/^/  - /'
