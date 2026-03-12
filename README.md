@@ -158,7 +158,7 @@ After running `docker compose up` (build-from-source mode), the BullMQ job queue
 http://localhost:4000/internal/bull-board
 ```
 
-No authentication is required in local development. All 6 queues (`scan:dispatch`, `scan:bot`, `expiry`, `reconciliation`, `notification`, `summary`) are visible once the workers service has started.
+No authentication is required in local development. All 6 queues (`scan-dispatch`, `scan-bot`, `expiry`, `reconciliation`, `notification`, `summary`) are visible once the workers service has started.
 
 > **Note:** Bull Board is only available in build-from-source mode (`docker compose up`). It is not available in GHCR mode (`--profile ghcr`) because the production image excludes devDependencies.
 
