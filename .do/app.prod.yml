@@ -63,6 +63,17 @@ services:
         value: "true"
       - key: CORS_ORIGIN
         value: "https://tachyon.app"
+      - key: AUTH0_DOMAIN
+        value: ""
+        type: SECRET
+      - key: AUTH0_AUDIENCE
+        value: ""
+        type: SECRET
+      - key: AUTH0_JWKS_CACHE_TTL
+        value: "600"
+      - key: SENTRY_DSN
+        value: ""
+        type: SECRET
       - key: GIT_COMMIT_SHA
         value: "${_self.COMMIT_HASH}"
 

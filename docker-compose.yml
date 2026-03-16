@@ -89,6 +89,10 @@ services:
       CORS_ORIGIN: http://localhost:8081
       BULL_BOARD_USERNAME: ""
       BULL_BOARD_PASSWORD: ""
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN:-}
+      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
+      AUTH0_JWKS_CACHE_TTL: ${AUTH0_JWKS_CACHE_TTL:-600}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     volumes:
       - ../tachyon-api/src:/app/src
     depends_on:
@@ -178,6 +182,10 @@ services:
       CORS_ORIGIN: http://localhost:8081
       BULL_BOARD_USERNAME: ""
       BULL_BOARD_PASSWORD: ""
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN:-}
+      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
+      AUTH0_JWKS_CACHE_TTL: ${AUTH0_JWKS_CACHE_TTL:-600}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     depends_on:
       postgres:
         condition: service_healthy
