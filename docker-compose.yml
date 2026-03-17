@@ -33,7 +33,7 @@ services:
       POSTGRES_USER: tachyon
       POSTGRES_PASSWORD: tachyon_local_dev
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U tachyon -d tachyon_dev"]
       interval: 10s
@@ -150,7 +150,7 @@ services:
     container_name: tachyon-db-migrate
     environment:
       MIGRATION_ENV: local
-      DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
+      DB_MIGRATE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
     volumes:
       - ../tachyon-db/src:/app/src
     depends_on:
@@ -235,7 +235,7 @@ services:
     container_name: tachyon-db-migrate
     environment:
       MIGRATION_ENV: local
-      DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
+      DB_MIGRATE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
     depends_on:
       postgres:
         condition: service_healthy
