@@ -32,6 +32,10 @@
 #   - STAGING_DB_MIGRATE_DATABASE_URL  — postgres://tachyon_migrate:<pw>@<host>:25060/defaultdb
 #   - STAGING_APP_DATABASE_URL         — postgres://tachyon_app:<pw>@<host>:25060/defaultdb
 #   - STAGING_DB_ENCRYPTION_KEY        — 32-byte hex (openssl rand -hex 32)
+#   - CLERK_PUBLISHABLE_KEY            — Clerk staging publishable key (pk_test_...)
+#   - CLERK_SECRET_KEY                 — Clerk staging secret key (sk_test_...)
+#   - CLERK_JWKS_URL                   — https://<clerk-frontend-api>/.well-known/jwks.json
+#   - CLERK_ISSUER                     — https://<clerk-frontend-api>
 #
 # Required GitHub Environment:
 #   - staging
@@ -111,6 +115,10 @@ jobs:
           DB_MIGRATE_DATABASE_URL: ${{ secrets.STAGING_DB_MIGRATE_DATABASE_URL }}
           APP_DATABASE_URL: ${{ secrets.STAGING_APP_DATABASE_URL }}
           DB_ENCRYPTION_KEY: ${{ secrets.STAGING_DB_ENCRYPTION_KEY }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          CLERK_JWKS_URL: ${{ secrets.CLERK_JWKS_URL }}
+          CLERK_ISSUER: ${{ secrets.CLERK_ISSUER }}
         run: |
           python3 -c "
           import yaml, os
@@ -130,6 +138,10 @@ jobs:
               'tachyon-api': {
                   'DATABASE_URL': os.environ['APP_DATABASE_URL'],
                   'DB_ENCRYPTION_KEY': os.environ['DB_ENCRYPTION_KEY'],
+                  'CLERK_PUBLISHABLE_KEY': os.environ['CLERK_PUBLISHABLE_KEY'],
+                  'CLERK_SECRET_KEY': os.environ['CLERK_SECRET_KEY'],
+                  'CLERK_JWKS_URL': os.environ['CLERK_JWKS_URL'],
+                  'CLERK_ISSUER': os.environ['CLERK_ISSUER'],
               },
               'tachyon-workers': {
                   'DATABASE_URL': os.environ['APP_DATABASE_URL'],
