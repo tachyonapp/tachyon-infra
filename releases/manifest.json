@@ -4,9 +4,9 @@
   "description": "",
   "services": {
     "tachyon-api": {
-      "sha": "64207644807bd0ae7efc193da38978e0cef89e4e",
+      "sha": "037b971da40a5c364e722857c731e76fd58f9117",
       "image": "ghcr.io/tachyonapp/tachyon-api",
-      "tag": "64207644807bd0ae7efc193da38978e0cef89e4e"
+      "tag": "037b971da40a5c364e722857c731e76fd58f9117"
     },
     "tachyon-workers": {
       "sha": "2f9e050447ffe25d88c4035db2d4bb3f9987b7ff",
@@ -21,7 +21,7 @@
   },
   "environments": {
     "staging": {
-      "deployed_at": "2026-03-18T20:05:40Z",
+      "deployed_at": "2026-03-19T23:11:10Z",
       "deployed_by": "MarcZenn"
     },
     "production": {
