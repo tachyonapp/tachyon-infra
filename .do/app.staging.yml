@@ -67,13 +67,24 @@ services:
       - key: BULL_BOARD_PASSWORD
         value: ""
         type: SECRET
-      - key: AUTH0_DOMAIN
-        value: ""
+      - key: CLERK_PUBLISHABLE_KEY
+        scope: RUN_TIME
         type: SECRET
-      - key: AUTH0_AUDIENCE
         value: ""
+      - key: CLERK_SECRET_KEY
+        scope: RUN_TIME
         type: SECRET
-      - key: AUTH0_JWKS_CACHE_TTL
+        value: ""
+      - key: CLERK_JWKS_URL
+        scope: RUN_TIME
+        type: SECRET
+        value: ""
+      - key: CLERK_ISSUER
+        scope: RUN_TIME
+        type: SECRET
+        value: ""
+      - key: CLERK_JWKS_CACHE_TTL
+        scope: RUN_TIME
         value: "600"
       - key: SENTRY_DSN
         value: ""
