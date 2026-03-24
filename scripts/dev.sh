@@ -25,6 +25,22 @@ YELLOW="\033[33m"
 echo -e "${BOLD}Starting Tachyon local dev stack...${RESET}"
 echo ""
 
+# Export Clerk vars from tachyon-api/.env so docker-compose substitution picks them up.
+# Only exports variables that aren't already set in the environment.
+API_ENV="$(dirname "$0")/../../tachyon-api/.env"
+if [ -f "$API_ENV" ]; then
+  while IFS='=' read -r key value; do
+    # Skip comments and blank lines
+    [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+    # Only export CLERK_* vars; don't override existing env
+    if [[ "$key" == CLERK_* && -z "${!key:-}" ]]; then
+      export "$key=$value"
+    fi
+  done < "$API_ENV"
+else
+  echo -e "${YELLOW}Warning: ../tachyon-api/.env not found — CLERK_* vars may be missing${RESET}"
+fi
+
 # Verify ngrok is installed
 if ! command -v ngrok &>/dev/null; then
   echo "Error: ngrok not found. Install it with: brew install ngrok"
