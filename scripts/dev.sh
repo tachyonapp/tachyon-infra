@@ -7,7 +7,8 @@
 # Prerequisites:
 #   - ngrok installed and authenticated (ngrok config add-authtoken <token>)
 #   - Docker Desktop running
-#   - CLERK_WEBHOOK_SECRET set in ../tachyon-api/.env
+#   - tachyon-infra/.env present with CLERK_JWKS_URL, CLERK_ISSUER, CLERK_WEBHOOK_SECRET
+#     (Docker Compose reads this file automatically for variable substitution)
 #
 # Usage:
 #   ./scripts/dev.sh
@@ -22,23 +23,17 @@ RESET="\033[0m"
 GREEN="\033[32m"
 YELLOW="\033[33m"
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
 echo -e "${BOLD}Starting Tachyon local dev stack...${RESET}"
 echo ""
 
-# Export Clerk vars from tachyon-api/.env so docker-compose substitution picks them up.
-# Only exports variables that aren't already set in the environment.
-API_ENV="$(dirname "$0")/../../tachyon-api/.env"
-if [ -f "$API_ENV" ]; then
-  while IFS='=' read -r key value; do
-    # Skip comments and blank lines
-    [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
-    # Only export CLERK_* vars; don't override existing env
-    if [[ "$key" == CLERK_* && -z "${!key:-}" ]]; then
-      export "$key=$value"
-    fi
-  done < "$API_ENV"
-else
-  echo -e "${YELLOW}Warning: ../tachyon-api/.env not found — CLERK_* vars may be missing${RESET}"
+# Warn if the .env file is missing — Docker Compose needs it for CLERK_* substitution
+if [ ! -f "${PROJECT_DIR}/.env" ]; then
+  echo -e "${YELLOW}Warning: .env not found in $(basename "${PROJECT_DIR}") — CLERK_* vars will be empty.${RESET}"
+  echo -e "${YELLOW}Create ${PROJECT_DIR}/.env with CLERK_JWKS_URL, CLERK_ISSUER, and CLERK_WEBHOOK_SECRET.${RESET}"
+  echo ""
 fi
 
 # Verify ngrok is installed

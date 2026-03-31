@@ -131,7 +131,12 @@ Any flags passed to `dev.sh` are forwarded to `docker compose up`:
 **Prerequisites for the ngrok tunnel:**
 - ngrok installed: `brew install ngrok`
 - ngrok authenticated: `ngrok config add-authtoken <token>` (token from [ngrok.com/dashboard](https://dashboard.ngrok.com))
-- `CLERK_WEBHOOK_SECRET` set in `../tachyon-api/.env` (signing secret from Clerk Dashboard → Webhooks)
+- `tachyon-infra/.env` present with the following Clerk vars (Docker Compose reads this file automatically):
+  ```
+  CLERK_JWKS_URL=https://<clerk-frontend-api>/.well-known/jwks.json
+  CLERK_ISSUER=https://<clerk-frontend-api>
+  CLERK_WEBHOOK_SECRET=whsec_...
+  ```
 
 > If you don't need webhook delivery (e.g. running integration tests or infrastructure-only work), you can still use `docker compose up` directly.
 

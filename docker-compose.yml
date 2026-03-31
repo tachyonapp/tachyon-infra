@@ -75,6 +75,12 @@ services:
     container_name: tachyon-api
     ports:
       - "4000:4000"
+    # Load API-specific secrets (CLERK_*, SENTRY_DSN, etc.) directly from the
+    # tachyon-api repo. The environment: block below overrides any vars that
+    # differ inside Docker (DATABASE_URL, VALKEY_HOST, etc.).
+    env_file:
+      - path: ../tachyon-api/.env
+        required: false
     environment:
       NODE_ENV: development
       PORT: "4000"
@@ -89,11 +95,9 @@ services:
       CORS_ORIGIN: http://localhost:8081
       BULL_BOARD_USERNAME: ""
       BULL_BOARD_PASSWORD: ""
-      CLERK_JWKS_URL: ${CLERK_JWKS_URL:-}
-      CLERK_ISSUER: ${CLERK_ISSUER:-}
-      CLERK_JWKS_CACHE_TTL: ${CLERK_JWKS_CACHE_TTL:-600}
-      CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET:-}
-      SENTRY_DSN: ${SENTRY_DSN:-}
+      # CLERK_*, SENTRY_DSN come from env_file (../tachyon-api/.env) — do NOT
+      # duplicate them here. Listing them as ${VAR:-} would resolve to empty
+      # from tachyon-infra/.env and override the correct values from env_file.
     volumes:
       - ../tachyon-api/src:/app/src
     depends_on:
@@ -169,6 +173,9 @@ services:
     container_name: tachyon-api
     ports:
       - "4000:4000"
+    env_file:
+      - path: ../tachyon-api/.env
+        required: false
     environment:
       NODE_ENV: development
       PORT: "4000"
@@ -183,11 +190,9 @@ services:
       CORS_ORIGIN: http://localhost:8081
       BULL_BOARD_USERNAME: ""
       BULL_BOARD_PASSWORD: ""
-      CLERK_JWKS_URL: ${CLERK_JWKS_URL:-}
-      CLERK_ISSUER: ${CLERK_ISSUER:-}
-      CLERK_JWKS_CACHE_TTL: ${CLERK_JWKS_CACHE_TTL:-600}
-      CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET:-}
-      SENTRY_DSN: ${SENTRY_DSN:-}
+      # CLERK_*, SENTRY_DSN come from env_file (../tachyon-api/.env) — do NOT
+      # duplicate them here. Listing them as ${VAR:-} would resolve to empty
+      # from tachyon-infra/.env and override the correct values from env_file.
     depends_on:
       postgres:
         condition: service_healthy
