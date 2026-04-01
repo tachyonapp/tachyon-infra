@@ -36,6 +36,7 @@
 #   - CLERK_SECRET_KEY                 — Clerk staging secret key (sk_test_...)
 #   - CLERK_JWKS_URL                   — https://<clerk-frontend-api>/.well-known/jwks.json
 #   - CLERK_ISSUER                     — https://<clerk-frontend-api>
+#   - CLERK_WEBHOOK_SECRET             — Svix signing secret for /webhooks/clerk (from Clerk dashboard)
 #
 # Required GitHub Environment:
 #   - staging
@@ -119,6 +120,7 @@ jobs:
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           CLERK_JWKS_URL: ${{ secrets.CLERK_JWKS_URL }}
           CLERK_ISSUER: ${{ secrets.CLERK_ISSUER }}
+          CLERK_WEBHOOK_SECRET: ${{ secrets.CLERK_WEBHOOK_SECRET }}
         run: |
           python3 -c "
           import yaml, os
@@ -142,6 +144,7 @@ jobs:
                   'CLERK_SECRET_KEY': os.environ['CLERK_SECRET_KEY'],
                   'CLERK_JWKS_URL': os.environ['CLERK_JWKS_URL'],
                   'CLERK_ISSUER': os.environ['CLERK_ISSUER'],
+                  'CLERK_WEBHOOK_SECRET': os.environ['CLERK_WEBHOOK_SECRET'],
               },
               'tachyon-workers': {
                   'DATABASE_URL': os.environ['APP_DATABASE_URL'],

@@ -8,6 +8,7 @@
     "validate:env": "bash scripts/validate-env.sh",
     "validate": "npm run validate:yaml && npm run validate:env",
     "setup": "bash scripts/setup.sh",
+    "dev": "bash scripts/dev.sh",
     "lint": "eslint . --fix"
   },
   "devDependencies": {

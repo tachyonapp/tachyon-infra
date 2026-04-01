@@ -45,6 +45,7 @@ tachyon-infra/
 │   ├── manifest.json             # Current release: pinned image SHAs per service
 │   └── README.md                 # Release manifest format and workflow docs
 ├── scripts/
+│   ├── dev.sh                    # Start local stack: ngrok tunnel + docker compose up
 │   ├── setup.sh                  # Clone all sibling repos and validate layout
 │   ├── validate-env.sh           # Check env files for variable consistency
 │   └── create-release.sh         # Generate a new release manifest
@@ -67,6 +68,7 @@ tachyon-infra/
 | Node.js | 20+ | [nodejs.org](https://nodejs.org/) or `nvm install 20` |
 | git | Any | Pre-installed on macOS/Linux |
 | GitHub CLI (`gh`) | Latest | `brew install gh` |
+| ngrok | Latest | `brew install ngrok` — then `ngrok config add-authtoken <token>` |
 
 ---
 
@@ -83,8 +85,8 @@ cd tachyon-infra
 # 3. Install YAML lint tooling
 npm install
 
-# 4. Start the full local stack (builds from sibling repos)
-docker compose up
+# 4. Start the full local stack (Docker Compose + ngrok tunnel)
+./scripts/dev.sh
 
 # 5. Verify the API is healthy
 curl http://localhost:4000/health
@@ -104,6 +106,41 @@ Expected response:
 ---
 
 ## Local Development
+
+### Dev Script
+
+`scripts/dev.sh` is the standard way to start the local stack. It runs two things in parallel and shuts both down cleanly on `Ctrl+C`:
+
+1. **ngrok tunnel** — opens a persistent public URL (`mandie-unstayable-lea.ngrok-free.dev`) that forwards Clerk webhook events to `localhost:4000`. Required so Clerk can deliver `user.created` events to the local API when a new user signs up.
+2. **Docker Compose** — starts all services (API, workers, Postgres, Valkey).
+
+```bash
+npm run dev
+```
+
+Any flags passed to `dev.sh` are forwarded to `docker compose up`:
+
+```bash
+# Rebuild images before starting
+./scripts/dev.sh --build
+
+# Run in detached mode
+./scripts/dev.sh -d
+```
+
+**Prerequisites for the ngrok tunnel:**
+- ngrok installed: `brew install ngrok`
+- ngrok authenticated: `ngrok config add-authtoken <token>` (token from [ngrok.com/dashboard](https://dashboard.ngrok.com))
+- `tachyon-infra/.env` present with the following Clerk vars (Docker Compose reads this file automatically):
+  ```
+  CLERK_JWKS_URL=https://<clerk-frontend-api>/.well-known/jwks.json
+  CLERK_ISSUER=https://<clerk-frontend-api>
+  CLERK_WEBHOOK_SECRET=whsec_...
+  ```
+
+> If you don't need webhook delivery (e.g. running integration tests or infrastructure-only work), you can still use `docker compose up` directly.
+
+---
 
 ### Docker Compose Modes
 
