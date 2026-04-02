@@ -155,7 +155,7 @@ services:
     container_name: tachyon-db-migrate
     environment:
       MIGRATION_ENV: local
-      DB_MIGRATE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
+      DB_MIGRATE_URL: postgres://tachyon_migrate:migrate_password_local@postgres:5432/tachyon_dev
     volumes:
       - ../tachyon-db/src:/app/src
     depends_on:
@@ -242,7 +242,7 @@ services:
     container_name: tachyon-db-migrate
     environment:
       MIGRATION_ENV: local
-      DB_MIGRATE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
+      DB_MIGRATE_URL: postgres://tachyon_migrate:migrate_password_local@postgres:5432/tachyon_dev
     depends_on:
       postgres:
         condition: service_healthy
