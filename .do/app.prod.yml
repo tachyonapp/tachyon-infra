@@ -120,6 +120,11 @@ workers:
         type: SECRET
       - key: BULLMQ_CONCURRENCY
         value: "5"
+      - key: TACHYON_BRAIN_DAILY_CAP
+        value: "10"
+      - key: ANTHROPIC_API_KEY
+        value: ""
+        type: SECRET
       - key: SENTRY_DSN
         value: ""
         type: SECRET
