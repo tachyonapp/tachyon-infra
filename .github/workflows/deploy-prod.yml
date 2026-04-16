@@ -38,6 +38,7 @@
 #   - CLERK_JWKS_URL                  — https://<clerk-frontend-api>/.well-known/jwks.json
 #   - CLERK_ISSUER                    — https://<clerk-frontend-api>
 #   - CLERK_WEBHOOK_SECRET            — Svix signing secret for /webhooks/clerk (from Clerk dashboard)
+#   - ANTHROPIC_API_KEY               — Anthropic API key for tachyon-workers hosted brain (Claude Haiku)
 #
 # Required GitHub Environment:
 #   - production (with required reviewers configured)
@@ -112,6 +113,7 @@ jobs:
           CLERK_JWKS_URL: ${{ secrets.CLERK_JWKS_URL }}
           CLERK_ISSUER: ${{ secrets.CLERK_ISSUER }}
           CLERK_WEBHOOK_SECRET: ${{ secrets.CLERK_WEBHOOK_SECRET }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           python3 -c "
           import yaml, os
@@ -138,6 +140,7 @@ jobs:
               'tachyon-workers': {
                   'DATABASE_URL': os.environ['APP_DATABASE_URL'],
                   'DB_ENCRYPTION_KEY': os.environ['DB_ENCRYPTION_KEY'],
+                  'ANTHROPIC_API_KEY': os.environ['ANTHROPIC_API_KEY'],
               },
               'db-migrate': {
                   'DATABASE_URL': os.environ['DB_MIGRATE_DATABASE_URL'],

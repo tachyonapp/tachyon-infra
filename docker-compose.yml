@@ -124,6 +124,12 @@ services:
         - node_auth_token
     command: npx tsx watch src/index.ts
     container_name: tachyon-workers
+    # Load workers-specific secrets (ANTHROPIC_API_KEY, SENTRY_DSN, etc.) directly
+    # from the tachyon-workers repo. The environment: block below overrides any vars
+    # that differ inside Docker (DATABASE_URL, VALKEY_HOST, etc.).
+    env_file:
+      - path: ../tachyon-workers/.env
+        required: false
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
@@ -134,7 +140,10 @@ services:
       DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
       POSTGRES_SSL: "false"
       BULLMQ_CONCURRENCY: "5"
-      SENTRY_DSN: ""
+      TACHYON_BRAIN_DAILY_CAP: "10"
+      # ANTHROPIC_API_KEY, SENTRY_DSN come from env_file (../tachyon-workers/.env) — do NOT
+      # duplicate them here. Listing them as ${VAR:-} would resolve to empty
+      # from tachyon-infra/.env and override the correct values from env_file.
     volumes:
       - ../tachyon-workers/src:/app/src
     depends_on:
@@ -214,6 +223,9 @@ services:
   workers-ghcr:
     image: ghcr.io/tachyonapp/tachyon-workers:latest
     container_name: tachyon-workers
+    env_file:
+      - path: ../tachyon-workers/.env
+        required: false
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
@@ -224,7 +236,10 @@ services:
       DATABASE_URL: postgres://tachyon:tachyon_local_dev@postgres:5432/tachyon_dev
       POSTGRES_SSL: "false"
       BULLMQ_CONCURRENCY: "5"
-      SENTRY_DSN: ""
+      TACHYON_BRAIN_DAILY_CAP: "10"
+      # ANTHROPIC_API_KEY, SENTRY_DSN come from env_file (../tachyon-workers/.env) — do NOT
+      # duplicate them here. Listing them as ${VAR:-} would resolve to empty
+      # from tachyon-infra/.env and override the correct values from env_file.
     depends_on:
       postgres:
         condition: service_healthy
