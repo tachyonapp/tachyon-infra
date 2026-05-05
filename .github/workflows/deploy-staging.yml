@@ -38,6 +38,11 @@
 #   - CLERK_ISSUER                     — https://<clerk-frontend-api>
 #   - CLERK_WEBHOOK_SECRET             — Svix signing secret for /webhooks/clerk (from Clerk dashboard)
 #   - ANTHROPIC_API_KEY                — Anthropic API key for tachyon-workers hosted brain (Claude Haiku)
+#   - TACHYON_BRAIN_DAILY_CAP          — Daily AI call cap for tachyon-workers hosted brain
+#   - STRIPE_SECRET_KEY                — Stripe secret key for tachyon-api
+#   - STRIPE_WEBHOOK_SECRET            — Stripe webhook signing secret for tachyon-api
+#   - STRIPE_PRICE_ID_BYOK             — Stripe price ID for BYOK tier
+#   - STRIPE_PRICE_ID_TACHYON_HOSTED   — Stripe price ID for TACHYON_HOSTED tier
 #
 # Required GitHub Environment:
 #   - staging
@@ -123,6 +128,11 @@ jobs:
           CLERK_ISSUER: ${{ secrets.CLERK_ISSUER }}
           CLERK_WEBHOOK_SECRET: ${{ secrets.CLERK_WEBHOOK_SECRET }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TACHYON_BRAIN_DAILY_CAP: ${{ secrets.TACHYON_BRAIN_DAILY_CAP }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          STRIPE_PRICE_ID_BYOK: ${{ secrets.STRIPE_PRICE_ID_BYOK }}
+          STRIPE_PRICE_ID_TACHYON_HOSTED: ${{ secrets.STRIPE_PRICE_ID_TACHYON_HOSTED }}
         run: |
           python3 -c "
           import yaml, os
@@ -147,11 +157,16 @@ jobs:
                   'CLERK_JWKS_URL': os.environ['CLERK_JWKS_URL'],
                   'CLERK_ISSUER': os.environ['CLERK_ISSUER'],
                   'CLERK_WEBHOOK_SECRET': os.environ['CLERK_WEBHOOK_SECRET'],
+                  'STRIPE_SECRET_KEY': os.environ['STRIPE_SECRET_KEY'],
+                  'STRIPE_WEBHOOK_SECRET': os.environ['STRIPE_WEBHOOK_SECRET'],
+                  'STRIPE_PRICE_ID_BYOK': os.environ['STRIPE_PRICE_ID_BYOK'],
+                  'STRIPE_PRICE_ID_TACHYON_HOSTED': os.environ['STRIPE_PRICE_ID_TACHYON_HOSTED'],
               },
               'tachyon-workers': {
                   'DATABASE_URL': os.environ['APP_DATABASE_URL'],
                   'DB_ENCRYPTION_KEY': os.environ['DB_ENCRYPTION_KEY'],
                   'ANTHROPIC_API_KEY': os.environ['ANTHROPIC_API_KEY'],
+                  'TACHYON_BRAIN_DAILY_CAP': os.environ['TACHYON_BRAIN_DAILY_CAP'],
               },
               'db-migrate': {
                   'DATABASE_URL': os.environ['DB_MIGRATE_DATABASE_URL'],
