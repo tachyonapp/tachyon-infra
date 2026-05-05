@@ -85,6 +85,18 @@ services:
       - key: CLERK_JWKS_CACHE_TTL
         scope: RUN_TIME
         value: "600"
+      - key: STRIPE_SECRET_KEY
+        value: ""
+        type: SECRET
+      - key: STRIPE_WEBHOOK_SECRET
+        value: ""
+        type: SECRET
+      - key: STRIPE_PRICE_ID_BYOK
+        value: ""
+        type: SECRET
+      - key: STRIPE_PRICE_ID_TACHYON_HOSTED
+        value: ""
+        type: SECRET
       - key: SENTRY_DSN
         value: ""
         type: SECRET
