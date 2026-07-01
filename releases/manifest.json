@@ -4,24 +4,24 @@
   "description": "",
   "services": {
     "tachyon-api": {
-      "sha": "6083adcdca07318c71d11d357b4182e001fb1588",
+      "sha": "94d87097c25fc97174eec7dfb06902e168109f66",
       "image": "ghcr.io/tachyonapp/tachyon-api",
-      "tag": "6083adcdca07318c71d11d357b4182e001fb1588"
+      "tag": "94d87097c25fc97174eec7dfb06902e168109f66"
     },
     "tachyon-workers": {
-      "sha": "45317e21dd5b866e66d712651659bc7da5eea84a",
+      "sha": "18dd7ea961b9cf105d5d51fc8a884c5be58f08fa",
       "image": "ghcr.io/tachyonapp/tachyon-workers",
-      "tag": "45317e21dd5b866e66d712651659bc7da5eea84a"
+      "tag": "18dd7ea961b9cf105d5d51fc8a884c5be58f08fa"
     },
     "tachyon-db-migrate": {
-      "sha": "16fc838cb7f922a1744d90bfab00b7a49bf76497",
+      "sha": "d5a7e92fcba569202c730677898283d0d7620488",
       "image": "ghcr.io/tachyonapp/tachyon-db-migrate",
-      "tag": "16fc838cb7f922a1744d90bfab00b7a49bf76497"
+      "tag": "d5a7e92fcba569202c730677898283d0d7620488"
     }
   },
   "environments": {
     "staging": {
-      "deployed_at": "2026-05-05T03:16:16Z",
+      "deployed_at": "2026-07-01T17:17:59Z",
       "deployed_by": "MarcZenn"
     },
     "production": {
