@@ -1,6 +1,6 @@
 {
   "name": "tachyon-infra",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tachyon infrastructure-as-code: Docker Compose, App Spec, CI/CD templates",
   "private": true,
   "scripts": {
