@@ -83,15 +83,19 @@ services:
         value: "600"
       - key: STRIPE_SECRET_KEY
         value: ""
+        scope: RUN_TIME
         type: SECRET
       - key: STRIPE_WEBHOOK_SECRET
         value: ""
+        scope: RUN_TIME
         type: SECRET
       - key: STRIPE_PRICE_ID_BYOK
         value: ""
+        scope: RUN_TIME
         type: SECRET
       - key: STRIPE_PRICE_ID_TACHYON_HOSTED
         value: ""
+        scope: RUN_TIME
         type: SECRET
       - key: SENTRY_DSN
         value: ""
@@ -137,6 +141,27 @@ workers:
       - key: ANTHROPIC_API_KEY
         value: ""
         type: SECRET
+      - key: EODHD_API_KEY
+        value: ""
+        type: SECRET
+      - key: UNIVERSE_REFRESH_ENABLED
+        value: "false"
+      - key: UNIVERSE_REFRESH_FAST_TIER_SECONDS
+        value: "300"
+      - key: UNIVERSE_REFRESH_SLOW_TIER_SECONDS
+        value: "3600"
+      - key: SCAN_STALENESS_MAX_AGE_FAST_SECONDS
+        value: "240"
+      - key: SCAN_STALENESS_MAX_AGE_SLOW_SECONDS
+        value: "3000"
+      - key: EODHD_BREAKER_FAILURE_THRESHOLD
+        value: "3"
+      - key: EODHD_BREAKER_BACKOFF_SECONDS
+        value: "300,900,1800"
+      - key: SLOW_TIER_DEGRADED_SERVE_SUSTAINED_THRESHOLD_SECONDS
+        value: "1800"
+      - key: SLOW_TIER_DEGRADED_SERVE_OUTER_CAP_SECONDS
+        value: "86400"
       - key: SENTRY_DSN
         value: ""
         type: SECRET
