@@ -146,6 +146,8 @@ workers:
         type: SECRET
       - key: UNIVERSE_REFRESH_ENABLED
         value: "false"
+      - key: EARNINGS_REFRESH_LOOKAHEAD_HOURS
+        value: "24"
       - key: UNIVERSE_REFRESH_FAST_TIER_SECONDS
         value: "300"
       - key: UNIVERSE_REFRESH_SLOW_TIER_SECONDS
