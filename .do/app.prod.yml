@@ -148,6 +148,10 @@ workers:
         value: "false"
       - key: EARNINGS_REFRESH_LOOKAHEAD_HOURS
         value: "24"
+      - key: UNIVERSE_FILTER_EARNINGS_STANDDOWN_WINDOW_DAYS
+        value: "5"
+      - key: UNIVERSE_FILTER_SHORT_INTEREST_HIGH_THRESHOLD_PCT
+        value: "20"
       - key: UNIVERSE_REFRESH_FAST_TIER_SECONDS
         value: "300"
       - key: UNIVERSE_REFRESH_SLOW_TIER_SECONDS
