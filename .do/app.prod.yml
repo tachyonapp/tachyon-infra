@@ -160,6 +160,8 @@ workers:
         value: "240"
       - key: SCAN_STALENESS_MAX_AGE_SLOW_SECONDS
         value: "3000"
+      - key: SCAN_BOUNDED_REFRESH_TIMEOUT_MS
+        value: "5000"
       - key: EODHD_BREAKER_FAILURE_THRESHOLD
         value: "3"
       - key: EODHD_BREAKER_BACKOFF_SECONDS
