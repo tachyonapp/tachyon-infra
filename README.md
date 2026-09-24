@@ -265,6 +265,31 @@ Run this locally whenever you:
 3. If it is intentionally absent from production, add its name to `PRODUCTION_EXCLUDED_VARS` in `scripts/validate-env.sh`
 4. Run `./scripts/validate-env.sh` to confirm zero failures before committing
 
+### Market Scanning / EODHD Variables
+
+All consumed by `tachyon-workers` (`universe-refresh.worker.ts`, `staleness-gate.ts`, `universe-filter-chain.ts`). Full behavioral context lives in that repo's README; this table is the "what to set it to and why" reference for the App Spec secret/config values.
+
+| Variable | Secret? | Default | Purpose |
+|---|---|---|---|
+| `EODHD_API_KEY` | **Yes** | *(blank — set via DO secret UI/CLI, never committed)* | EODHD vendor API key. `eodhd-client.ts` is the only file in `tachyon-workers` permitted to read it, and masks it in every log line. |
+| `UNIVERSE_REFRESH_ENABLED` | No | `false` | Dark-launch gate for the `universe-refresh` worker. Must be explicitly `"true"` for it to make any EODHD call — flip only after staging validation. |
+| `UNIVERSE_REFRESH_FAST_TIER_SECONDS` | No | `300` | Bucket cache freshness interval. Currently the *only* tier actually used — see the SLOW-tier note below. |
+| `UNIVERSE_REFRESH_SLOW_TIER_SECONDS` | No | `3600` | Reserved for independent per-field (fundamentals) refresh cadence. **Not yet read by any code** — `tachyon-workers`' current MVP simplification gates every bucket write by the FAST interval alone. Provisioned now so no App Spec change is needed when true per-field gating ships. |
+| `SCAN_STALENESS_MAX_AGE_FAST_SECONDS` | No | `240` | Staleness-gate threshold (seconds) for FAST-tier bucket data. Breaching this with a failed bounded refresh always produces `SKIPPED` — no exception exists for FAST-tier data at any breaker state. |
+| `SCAN_STALENESS_MAX_AGE_SLOW_SECONDS` | No | `3000` | Staleness-gate threshold (seconds) for SLOW-tier bucket data. |
+| `SCAN_BOUNDED_REFRESH_TIMEOUT_MS` | No | `5000` | Timeout for the one bounded, synchronous EODHD refresh attempt the staleness gate makes on a cache miss — distinct from `universe-refresh`'s own cadence/timeout. |
+| `EODHD_BREAKER_FAILURE_THRESHOLD` | No | `3` | Consecutive fully-failed `universe-refresh` **ticks** (not individual bucket failures) before the circuit breaker opens. |
+| `EODHD_BREAKER_BACKOFF_SECONDS` | No | `300,900,1800` | Comma-separated capped exponential backoff schedule (seconds) applied once the breaker is open. |
+| `SLOW_TIER_DEGRADED_SERVE_SUSTAINED_THRESHOLD_SECONDS` | No | `1800` (30 min) | **Final per product decision (2026-07-07), do not change without a new one.** Minimum sustained breaker-open duration before the SLOW-tier degraded-serve exception can apply. |
+| `SLOW_TIER_DEGRADED_SERVE_OUTER_CAP_SECONDS` | No | `86400` (24h) | **Final per product decision (2026-07-07), do not change without a new one.** Absolute outer bound — SLOW-tier data older than this is never served regardless of breaker state. |
+| `EARNINGS_REFRESH_LOOKAHEAD_HOURS` | No | `24` | Window before a symbol's `nextEarningsDate` within which `universe-refresh` fires an extra, immediate out-of-band refresh of just that bucket. |
+| `UNIVERSE_FILTER_EARNINGS_STANDDOWN_WINDOW_DAYS` | No | `5` | Calendar days before `nextEarningsDate` within which `universe-filter-chain.ts` excludes a candidate for a `STAND_DOWN`-configured bot. **Distinct from** the lookahead var above — that one triggers a *data refresh* (hours); this one is a *trading-risk exclusion gate* (days). |
+| `UNIVERSE_FILTER_SHORT_INTEREST_HIGH_THRESHOLD_PCT` | No | `20` | `shortInterestPct` threshold (percentage points) for both `AVOID_HIGH_SHORT_INTEREST` and `TARGET_SHORT_SQUEEZE` filter-chain behaviors. |
+
+> **EODHD API URL env var not added.** The original design called for an env var here; `eodhd-client.ts` instead hardcodes `https://eodhd.com/api` as a constant, there's no operational reason to make a fixed vendor URL env-tunable. If you're looking for it in the App Spec or `.env.example`, it isn't there — this was a deliberate simplification made during implementation, not an oversight.
+
+**TODO:: Licensing:** the EODHD tier actually provisioned behind `EODHD_API_KEY` matters independently of any of the above. The **Internal Use** tier is confirmed sufficient for dev/staging/QA and initial production — every variable in this table works correctly on it. Before any real external user (including a paper-trading alpha of any size) sees output derived from this key, the tier must be upgraded and the App Spec secret value swapped — tracked as its own go/no-go gate, independent of this feature's code-completion. See the Market Scanning & Universe Filtering dev tasks (USER-1/USER-2) for the full decision and gate criteria; this README section only covers what to set, not which vendor/tier to buy.
+
 ---
 
 ## CI/CD
